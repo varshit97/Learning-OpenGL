@@ -260,9 +260,13 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
-            if (action == GLFW_PRESS)
+            if (action == GLFW_RELEASE)
                 //  triangle_rot_dir *= -1;
                 mouseState=1;
+            if(action==GLFW_PRESS)
+            {
+                mouseState=1;
+            }
             break;
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_RELEASE) {
@@ -302,6 +306,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
 }
 
 VAO *triangle, *rectangle;
+VAO *leftWall,*rightWall,*bottomWall,*topWall;
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -330,13 +335,13 @@ void createRectangle ()
 {
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
-        0,0,0, // vertex 1
-        0,0.5,0, // vertex 2
-        0.5,0.5,0, // vertex 3
+        -2,-0.2,0, // vertex 1
+        -2,0.2,0, // vertex 2
+        -1.5,0.2,0, // vertex 3
 
-        0.5,0.5,0, // vertex 3
-        0.5,0,0, // vertex 4
-        0,0,0  // vertex 1
+        -1.5,0.2,0, // vertex 3
+        -1.5,-0.2,0, // vertex 4
+        -2,-0.2,0  // vertex 1
     };
 
     static const GLfloat color_buffer_data [] = {
@@ -352,12 +357,157 @@ void createRectangle ()
     rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
+pair <float,float> wallPosition[4][6];
+
+void createWalls()
+{
+    //Left Wall
+    static const GLfloat vertex_buffer_data_left [] = {
+        -4,-4,0, // vertex 1
+        -4,4,0, // vertex 2
+        -3.7,4,0, // vertex 3
+
+        -3.7,4,0, // vertex 3
+        -3.7,-4,0, // vertex 4
+        -4,-4,0  // vertex 1
+    };
+    wallPosition[0][0].first=-4;
+    wallPosition[0][0].second=-4;
+    wallPosition[0][1].first=-4;
+    wallPosition[0][1].second=4;
+    wallPosition[0][2].first=-3.7;
+    wallPosition[0][2].second=4;
+    wallPosition[0][3].first=-3.7;
+    wallPosition[0][3].second=4;
+    wallPosition[0][4].first=-3.7;
+    wallPosition[0][4].second=-4;
+    wallPosition[0][5].first=-4;
+    wallPosition[0][5].second=-4;
+    static const GLfloat color_buffer_data_left [] = {
+        1,0,0, // color 1
+        1,0,0, // color 2
+        1,0,0, // color 3
+        1,0,0, // color 3
+        1,0,0, // color 4
+        1,0,0  // color 1
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    leftWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_left, color_buffer_data_left, GL_FILL);
+
+    //Right Wall
+    static const GLfloat vertex_buffer_data_right [] = {
+        4,4,0, // vertex 1
+        4,-4,0, // vertex 2
+        3.7,-4,0, // vertex 3
+
+        3.7,-4,0, // vertex 3
+        3.7,4,0, // vertex 4
+        4,4,0  // vertex 1
+    };
+    wallPosition[1][0].first=4;
+    wallPosition[1][0].second=4;
+    wallPosition[1][1].first=4;
+    wallPosition[1][1].second=-4;
+    wallPosition[1][2].first=3.7;
+    wallPosition[1][2].second=-4;
+    wallPosition[1][3].first=3.7;
+    wallPosition[1][3].second=-4;
+    wallPosition[1][4].first=3.7;
+    wallPosition[1][4].second=4;
+    wallPosition[1][5].first=4;
+    wallPosition[1][5].second=4;
+
+    static const GLfloat color_buffer_data_right [] = {
+        1,0,0, // color 1
+        1,0,0, // color 2
+        1,0,0, // color 3
+        1,0,0, // color 3
+        1,0,0, // color 4
+        1,0,0  // color 1
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    rightWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_right, color_buffer_data_right, GL_FILL);
+
+    //floor
+    static const GLfloat vertex_buffer_data_floor [] = {
+        -4,3.7,0, // vertex 1
+        -4,4,0, // vertex 2
+        4,4,0, // vertex 3
+
+        4,4,0, // vertex 3
+        4,3.7,0, // vertex 4
+        -4,3.7,0  // vertex 1
+    };
+    wallPosition[2][0].first=-4;
+    wallPosition[2][0].second=3.7;
+    wallPosition[2][1].first=-4;
+    wallPosition[2][1].second=4;
+    wallPosition[2][2].first=4;
+    wallPosition[2][2].second=4;
+    wallPosition[2][3].first=4;
+    wallPosition[2][3].second=4;
+    wallPosition[2][4].first=4;
+    wallPosition[2][4].second=3.7;
+    wallPosition[2][5].first=-4;
+    wallPosition[2][5].second=3.7;
+
+    static const GLfloat color_buffer_data_floor [] = {
+        1,0,0, // color 1
+        1,0,0, // color 2
+        1,0,0, // color 3
+        1,0,0, // color 3
+        1,0,0, // color 4
+        1,0,0  // color 1
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    bottomWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_floor, color_buffer_data_floor, GL_FILL);
+
+    //ceiling
+    static const GLfloat vertex_buffer_data_ceiling [] = {
+        4,-3.7,0, // vertex 1
+        4,-4,0, // vertex 2
+        -4,-4,0, // vertex 3
+
+        -4,-4,0, // vertex 3
+        -4,-3.7,0, // vertex 4
+        4,-3.7,0  // vertex 1
+    };
+    wallPosition[3][0].first=-4;
+    wallPosition[3][0].second=-3.7;
+    wallPosition[3][1].first=4;
+    wallPosition[3][1].second=-4;
+    wallPosition[3][2].first=-4;
+    wallPosition[3][2].second=-4;
+    wallPosition[3][3].first=-4;
+    wallPosition[3][3].second=-4;
+    wallPosition[3][4].first=-4;
+    wallPosition[3][4].second=-3.7;
+    wallPosition[3][5].first=4;
+    wallPosition[3][5].second=-3.7;
+
+    static const GLfloat color_buffer_data_ceiling [] = {
+        1,0,0, // color 1
+        1,0,0, // color 2
+        1,0,0, // color 3
+        1,0,0, // color 3
+        1,0,0, // color 4
+        1,0,0  // color 1
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    topWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_ceiling, color_buffer_data_ceiling, GL_FILL);
+}
+
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
 
-float changeX=0,changeY=0;
+float changeX=0,changeY=0,prevY=0;
 int flag=0;
+
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -396,14 +546,21 @@ void draw ()
 
     /* Render your scene */
 
-    glm::mat4 translateTriangle = glm::translate (glm::vec3(-2.0f, 0.0f, 0.0f)); // glTranslatef
-    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-    glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
+    //For Walls
+    
+    glm::mat4 translateTriangle = glm::translate (glm::vec3(0, 0, 0)); // glTranslatef
+//    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+    glm::mat4 triangleTransform = translateTriangle;
     Matrices.model *= triangleTransform; 
     MVP = VP * Matrices.model; // MVP = p * V * M
 
     //  Don't change unless you are sure!!
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+    draw3DObject(leftWall);
+    draw3DObject(rightWall);
+    draw3DObject(bottomWall);
+    draw3DObject(topWall);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
     //draw3DObject(rectangle);
@@ -413,12 +570,14 @@ void draw ()
     Matrices.model = glm::mat4(1.0f);
     if(mouseState==1)
     {
-        if(changeY<=0)
+        if(changeY<=-3)
         {
             flag=0;
+            cout << prevY << endl;
+            changeY=prevY;
             mouseState=0;
         }
-        if(changeY>=1)
+        if(changeY>=-3)
         {
             flag=1;
         }
@@ -430,10 +589,10 @@ void draw ()
         {
             changeY+=0.06;
         }
+        prevY=changeY;
     }
-    cout << changeX << " " << changeY << endl;
     glm::mat4 translateRectangle = glm::translate (glm::vec3(changeX, changeY, 0));   // glTranslatef
-    if(mouseState==1 && changeX<=2)
+    if(mouseState==1 && changeX<=5)
     {
         changeX=changeX+0.06;
     }
@@ -451,6 +610,7 @@ void draw ()
     //camera_rotation_angle++; // Simulating camera rotation
     triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
     rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
+
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -509,7 +669,7 @@ void initGL (GLFWwindow* window, int width, int height)
     // Create the models
     createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
     createRectangle ();
-
+    createWalls();
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
