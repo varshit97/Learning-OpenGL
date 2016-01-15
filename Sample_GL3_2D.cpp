@@ -253,18 +253,33 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     }
 }
 
-int mouseState=0;
+double ux=0.3,uy=0.6;
+double xmousePos=0,ymousePos=0;
+double cur_angle=0;
 
+int mouseState=0,buttonPressed=2;
+double cannonX=0,cannonY=0;
+double timer=0;
 /* Executed when a mouse button is pressed/released */
 void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
             if (action == GLFW_RELEASE)
+            {
                 //  triangle_rot_dir *= -1;
                 mouseState=1;
+                buttonPressed=1;
+                double u=0.7;
+                cur_angle=atan((ymousePos-cannonY)/(xmousePos-cannonX))*(180/M_PI);
+                cout << "angle " << cur_angle << endl;;
+                ux=u*cos(cur_angle*(M_PI/180));
+                uy=u*sin(cur_angle*(M_PI/180));
+            }
             if(action==GLFW_PRESS)
             {
+                buttonPressed=0;
+                cout << "button " << buttonPressed << endl;
                 mouseState=1;
             }
             break;
@@ -430,7 +445,7 @@ void createWalls()
     // create3DObject creates and returns a handle to a VAO that can be used later
     rightWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_right, color_buffer_data_right, GL_FILL);
 
-    //floor
+    //ceiling
     static const GLfloat vertex_buffer_data_floor [] = {
         -4,3.7,0, // vertex 1
         -4,4,0, // vertex 2
@@ -465,7 +480,7 @@ void createWalls()
     // create3DObject creates and returns a handle to a VAO that can be used later
     bottomWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_floor, color_buffer_data_floor, GL_FILL);
 
-    //ceiling
+    //floor
     static const GLfloat vertex_buffer_data_ceiling [] = {
         4,-3.7,0, // vertex 1
         4,-4,0, // vertex 2
@@ -504,9 +519,7 @@ void createWalls()
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
-
-float changeX=0,changeY=0,prevY=0;
-int flag=0;
+int flag=0,count=0,fall=0;
 
 
 /* Render the scene with openGL */
@@ -542,14 +555,13 @@ void draw ()
     glm::mat4 MVP;	// MVP = Projection * View * Model
 
     // Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
 
     /* Render your scene */
 
     //For Walls
-    
+    Matrices.model = glm::mat4(1.0f);
     glm::mat4 translateTriangle = glm::translate (glm::vec3(0, 0, 0)); // glTranslatef
-//    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+    //    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
     glm::mat4 triangleTransform = translateTriangle;
     Matrices.model *= triangleTransform; 
     MVP = VP * Matrices.model; // MVP = p * V * M
@@ -568,34 +580,23 @@ void draw ()
     // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
     // glPopMatrix ();
     Matrices.model = glm::mat4(1.0f);
-    if(mouseState==1)
+    if(buttonPressed==1)
     {
-        if(changeY<=-3)
+        uy-=0.05;
+        if(cannonY<0)
         {
-            flag=0;
-            cout << prevY << endl;
-            changeY=prevY;
-            mouseState=0;
+            ux=0;
+            uy=0;
         }
-        if(changeY>=-3)
+        if(cannonX>=5.2)
         {
-            flag=1;
+            ux=-ux;
         }
-        if(flag==1)
-        {
-            changeY-=0.06;
-        }
-        if(flag==0)
-        {
-            changeY+=0.06;
-        }
-        prevY=changeY;
+        cannonX+=ux;
+        cannonY+=uy;
     }
-    glm::mat4 translateRectangle = glm::translate (glm::vec3(changeX, changeY, 0));   // glTranslatef
-    if(mouseState==1 && changeX<=5)
-    {
-        changeX=changeX+0.06;
-    }
+ //   cout << cannonX << " " << cannonY << endl;
+    glm::mat4 translateRectangle = glm::translate (glm::vec3(cannonX, cannonY, 0));   // glTranslatef
     //  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
     Matrices.model *= translateRectangle;
     MVP = VP * Matrices.model;
@@ -713,7 +714,10 @@ int main (int argc, char** argv)
 
         // Poll for Keyboard and mouse events
         glfwPollEvents();
-
+        if(buttonPressed==0)
+        {
+            glfwGetCursorPos(window,&xmousePos,&ymousePos);
+        }
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
         if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
