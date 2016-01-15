@@ -324,28 +324,19 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-width/2.0f, width/2.0f, -height/2.0f, height/2.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle;
+//Define shapes
+VAO *triangle, *rectangle,*wheel1,*wheel2,*barrel,*firebarrel;
 VAO *leftWall,*rightWall,*bottomWall,*topWall;
 
 // Creates the triangle object used in this sample code
-void createTriangle ()
+VAO* createSector(float R,int parts)
 {
-    /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
-    /* Define vertex array as used in glBegin (GL_TRIANGLES) */
-    GLfloat vertex_buffer_data [] = {
-        0, 1,0, // vertex 0
-        -1,-1,0, // vertex 1
-        1,-1,0, // vertex 2
-    };
-
-    GLfloat color_buffer_data [] = {
-        1,0,0, // color 0
-        0,1,0, // color 1
-        0,0,1, // color 2
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    triangle = create3DObject(GL_TRIANGLES, 3, vertex_buffer_data, color_buffer_data, GL_LINE);
+	float diff=360.0f/parts;
+	float A1=formatAngle(-diff/2);
+	float A2=formatAngle(diff/2);
+	GLfloat vertex_buffer_data[]={0.0f,0.0f,0.0f,R*cos(D2R(A1)),R*sin(D2R(A1)),0.0f,R*cos(D2R(A2)),R*sin(D2R(A2)),0.0f};
+	GLfloat color_buffer_data[]={1,0,0,1,0,0,1,0,0};
+	return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,color_buffer_data,GL_FILL);
 }
 
 // Creates the rectangle object used in this sample code
@@ -363,11 +354,11 @@ VAO* createRectangle(float x,float y)
 
     static const GLfloat color_buffer_data [] = {
         1,0,0, // color 1
-        0,0,1, // color 2
-        0,1,0, // color 3
+        1,0,0, // color 2
+        1,0,0, // color 3
 
-        0,1,0, // color 3
-        0.3,0.3,0.3, // color 4
+        1,0,0, // color 3
+        1,0,0, // color 4
         1,0,0  // color 1
     };
     // create3DObject creates and returns a handle to a VAO that can be used later
@@ -393,10 +384,13 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     draw3DObject(obj);
 }
 
+double rotateBarrel=0;
+
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw ()
 {
+    rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
     if(buttonPressed==1)
     {
         timer+=0.5;
@@ -406,7 +400,7 @@ void draw ()
         {
             buttonPressed=0;
         }
-        cout << "mouse " << xmousePos << " " << ymousePos << endl;
+        //cout << "mouse " << xmousePos << " " << ymousePos << endl;
         //y=(height/2)-canonYpos-ymousepos x=xmousepos-((width/2)+canonXpos)
         cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         cout << cur_angle << endl;
@@ -425,6 +419,16 @@ void draw ()
     //1st glm::vec3(xpos,ypos), 2nd glm::vec3(rotate about) 
     drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
     drawobject(bottomWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
+    for(int i=0;i<360;i++)
+    {
+        drawobject(wheel1,glm::vec3(-330,-240,0),i,glm::vec3(0,0,1));
+    }
+    for(int j=0;j<360;j++)
+    {
+        drawobject(wheel2,glm::vec3(-235,-240,0),j,glm::vec3(0,0,1));
+    }
+    drawobject(barrel,glm::vec3(-285,-210,0),0,glm::vec3(0,0,1));
+    drawobject(firebarrel,glm::vec3(-315,-200,0),rotateBarrel,glm::vec3(0,0,1));
     //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
 
@@ -482,8 +486,11 @@ void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
-    createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-
+    // For the cannon base
+    wheel1=createSector(40,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+    wheel2=createSector(40,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+    barrel=createRectangle(50,10);
+    firebarrel=createRectangle(60,10);
     //set sizes length,breadth
     rectangle=createRectangle(10,10);
     bottomWall=createRectangle(10,500);
