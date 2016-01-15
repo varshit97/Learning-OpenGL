@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#define PI M_PI
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -199,6 +200,20 @@ void draw3DObject (struct VAO* vao)
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
+float formatAngle(float A)
+{
+    if(A<0.0f)
+        return A+360.0f;
+    if(A>=360.0f)
+        return A-360.0f;
+    return A;
+}
+float D2R(float A)
+{
+    return (A*PI)/180.0f;
+}
+
+
 /**************************
  * Customizable functions *
  **************************/
@@ -253,12 +268,13 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     }
 }
 
-double ux=0.3,uy=0.6;
+double ux=30,uy=60;
 double xmousePos=0,ymousePos=0;
 double cur_angle=0;
 
-int mouseState=0,buttonPressed=2;
-double cannonX=0,cannonY=0;
+int mouseState=0,buttonPressed=0;
+double cannonX=-150,cannonY=-230;
+double startX=cannonX,startY=cannonY;
 double timer=0;
 /* Executed when a mouse button is pressed/released */
 void mouseButton (GLFWwindow* window, int button, int action, int mods)
@@ -268,18 +284,10 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
             if (action == GLFW_RELEASE)
             {
                 //  triangle_rot_dir *= -1;
-                mouseState=1;
                 buttonPressed=1;
-                double u=0.7;
-                cur_angle=atan((ymousePos-cannonY)/(xmousePos-cannonX))*(180/M_PI);
-                cout << "angle " << cur_angle << endl;;
-                ux=u*cos(cur_angle*(M_PI/180));
-                uy=u*sin(cur_angle*(M_PI/180));
             }
             if(action==GLFW_PRESS)
             {
-                buttonPressed=0;
-                cout << "button " << buttonPressed << endl;
                 mouseState=1;
             }
             break;
@@ -317,7 +325,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     // Matrices.projection = glm::perspective (fov, (GLfloat) fbwidth / (GLfloat) fbheight, 0.1f, 500.0f);
 
     // Ortho projection for 2D views
-    Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
+    Matrices.projection = glm::ortho(-width/2.0f, width/2.0f, -height/2.0f, height/2.0f, 0.1f, 500.0f);
 }
 
 VAO *triangle, *rectangle;
@@ -329,13 +337,13 @@ void createTriangle ()
     /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
 
     /* Define vertex array as used in glBegin (GL_TRIANGLES) */
-    static const GLfloat vertex_buffer_data [] = {
+    GLfloat vertex_buffer_data [] = {
         0, 1,0, // vertex 0
         -1,-1,0, // vertex 1
         1,-1,0, // vertex 2
     };
 
-    static const GLfloat color_buffer_data [] = {
+    GLfloat color_buffer_data [] = {
         1,0,0, // color 0
         0,1,0, // color 1
         0,0,1, // color 2
@@ -346,59 +354,47 @@ void createTriangle ()
 }
 
 // Creates the rectangle object used in this sample code
-void createRectangle ()
+VAO* createRectangle(float x,float y)
 {
-    // GL3 accepts only Triangles. Quads are not supported
-    static const GLfloat vertex_buffer_data [] = {
-        -2,-0.2,0, // vertex 1
-        -2,0.2,0, // vertex 2
-        -1.5,0.2,0, // vertex 3
+    const GLfloat vertex_buffer_data [] = {
+        -x,-y,0.0, // vertex 1
+        x,-y,0.0, // vertex 2
+        x, y,0.0, // vertex 3
 
-        -1.5,0.2,0, // vertex 3
-        -1.5,-0.2,0, // vertex 4
-        -2,-0.2,0  // vertex 1
+        x, y,0.0, // vertex 3
+        -x, y,0.0, // vertex 4
+        -x,-y,0.0  // vertex 1
     };
 
     static const GLfloat color_buffer_data [] = {
         1,0,0, // color 1
-        1,0,0, // color 2
-        1,0,0, // color 3
-        1,0,0, // color 3
-        1,0,0, // color 4
+        0,0,1, // color 2
+        0,1,0, // color 3
+
+        0,1,0, // color 3
+        0.3,0.3,0.3, // color 4
         1,0,0  // color 1
     };
-
     // create3DObject creates and returns a handle to a VAO that can be used later
-    rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+    return create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
+
 
 pair <float,float> wallPosition[4][6];
 
 void createWalls()
 {
     //Left Wall
-    static const GLfloat vertex_buffer_data_left [] = {
-        -4,-4,0, // vertex 1
-        -4,4,0, // vertex 2
-        -3.7,4,0, // vertex 3
+    GLfloat vertex_buffer_data_left [] = {
+        -400,-400,0, // vertex 1
+        -400,400,0, // vertex 2
+        -370,400,0, // vertex 3
 
-        -3.7,4,0, // vertex 3
-        -3.7,-4,0, // vertex 4
-        -4,-4,0  // vertex 1
+        -370,400,0, // vertex 3
+        -370,-400,0, // vertex 4
+        -400,-400,0  // vertex 1
     };
-    wallPosition[0][0].first=-4;
-    wallPosition[0][0].second=-4;
-    wallPosition[0][1].first=-4;
-    wallPosition[0][1].second=4;
-    wallPosition[0][2].first=-3.7;
-    wallPosition[0][2].second=4;
-    wallPosition[0][3].first=-3.7;
-    wallPosition[0][3].second=4;
-    wallPosition[0][4].first=-3.7;
-    wallPosition[0][4].second=-4;
-    wallPosition[0][5].first=-4;
-    wallPosition[0][5].second=-4;
-    static const GLfloat color_buffer_data_left [] = {
+    GLfloat color_buffer_data_left [] = {
         1,0,0, // color 1
         1,0,0, // color 2
         1,0,0, // color 3
@@ -411,29 +407,16 @@ void createWalls()
     leftWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_left, color_buffer_data_left, GL_FILL);
 
     //Right Wall
-    static const GLfloat vertex_buffer_data_right [] = {
-        4,4,0, // vertex 1
-        4,-4,0, // vertex 2
-        3.7,-4,0, // vertex 3
+    GLfloat vertex_buffer_data_right [] = {
+        400,400,0, // vertex 1
+        400,-400,0, // vertex 2
+        370,-400,0, // vertex 3
 
-        3.7,-4,0, // vertex 3
-        3.7,4,0, // vertex 4
-        4,4,0  // vertex 1
+        370,-400,0, // vertex 3
+        370,400,0, // vertex 4
+        400,400,0  // vertex 1
     };
-    wallPosition[1][0].first=4;
-    wallPosition[1][0].second=4;
-    wallPosition[1][1].first=4;
-    wallPosition[1][1].second=-4;
-    wallPosition[1][2].first=3.7;
-    wallPosition[1][2].second=-4;
-    wallPosition[1][3].first=3.7;
-    wallPosition[1][3].second=-4;
-    wallPosition[1][4].first=3.7;
-    wallPosition[1][4].second=4;
-    wallPosition[1][5].first=4;
-    wallPosition[1][5].second=4;
-
-    static const GLfloat color_buffer_data_right [] = {
+    GLfloat color_buffer_data_right [] = {
         1,0,0, // color 1
         1,0,0, // color 2
         1,0,0, // color 3
@@ -446,29 +429,16 @@ void createWalls()
     rightWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_right, color_buffer_data_right, GL_FILL);
 
     //ceiling
-    static const GLfloat vertex_buffer_data_floor [] = {
-        -4,3.7,0, // vertex 1
-        -4,4,0, // vertex 2
-        4,4,0, // vertex 3
+    GLfloat vertex_buffer_data_floor [] = {
+        -400,270,0, // vertex 1
+        -400,300,0, // vertex 2
+        400,300,0, // vertex 3
 
-        4,4,0, // vertex 3
-        4,3.7,0, // vertex 4
-        -4,3.7,0  // vertex 1
+        400,300,0, // vertex 3
+        400,270,0, // vertex 4
+        -400,270,0  // vertex 1
     };
-    wallPosition[2][0].first=-4;
-    wallPosition[2][0].second=3.7;
-    wallPosition[2][1].first=-4;
-    wallPosition[2][1].second=4;
-    wallPosition[2][2].first=4;
-    wallPosition[2][2].second=4;
-    wallPosition[2][3].first=4;
-    wallPosition[2][3].second=4;
-    wallPosition[2][4].first=4;
-    wallPosition[2][4].second=3.7;
-    wallPosition[2][5].first=-4;
-    wallPosition[2][5].second=3.7;
-
-    static const GLfloat color_buffer_data_floor [] = {
+    GLfloat color_buffer_data_floor [] = {
         1,0,0, // color 1
         1,0,0, // color 2
         1,0,0, // color 3
@@ -481,29 +451,16 @@ void createWalls()
     bottomWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_floor, color_buffer_data_floor, GL_FILL);
 
     //floor
-    static const GLfloat vertex_buffer_data_ceiling [] = {
-        4,-3.7,0, // vertex 1
-        4,-4,0, // vertex 2
-        -4,-4,0, // vertex 3
+    GLfloat vertex_buffer_data_ceiling [] = {
+        400,-270,0, // vertex 1
+        400,-300,0, // vertex 2
+        -400,-300,0, // vertex 3
 
-        -4,-4,0, // vertex 3
-        -4,-3.7,0, // vertex 4
-        4,-3.7,0  // vertex 1
+        -400,-300,0, // vertex 3
+        -400,-270,0, // vertex 4
+        400,-270,0  // vertex 1
     };
-    wallPosition[3][0].first=-4;
-    wallPosition[3][0].second=-3.7;
-    wallPosition[3][1].first=4;
-    wallPosition[3][1].second=-4;
-    wallPosition[3][2].first=-4;
-    wallPosition[3][2].second=-4;
-    wallPosition[3][3].first=-4;
-    wallPosition[3][3].second=-4;
-    wallPosition[3][4].first=-4;
-    wallPosition[3][4].second=-3.7;
-    wallPosition[3][5].first=4;
-    wallPosition[3][5].second=-3.7;
-
-    static const GLfloat color_buffer_data_ceiling [] = {
+    GLfloat color_buffer_data_ceiling [] = {
         1,0,0, // color 1
         1,0,0, // color 2
         1,0,0, // color 3
@@ -522,96 +479,48 @@ float triangle_rotation = 0;
 int flag=0,count=0,fall=0;
 
 
+void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
+{
+    Matrices.view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    glm::mat4 VP = Matrices.projection * Matrices.view;
+    glm::mat4 MVP;	// MVP = Projection * View * Model
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translatemat = glm::translate(trans);
+    glm::mat4 rotatemat = glm::rotate(D2R(formatAngle(angle)), rotat);
+    Matrices.model *= (translatemat * rotatemat);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(obj);
+}
+
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw ()
 {
+    if(buttonPressed==1)
+    {
+        timer+=0.5;
+        if(timer>40)
+        {
+            buttonPressed=0;
+        }
+        double u=20;
+        cout << "mouse " << xmousePos << " " << ymousePos << endl;
+        cur_angle=atan2((530-ymousePos),(xmousePos-250))*(180/M_PI);
+        cout << cur_angle << endl;
+        ux=u*cos(cur_angle*(M_PI/180))*timer;
+        uy=u*sin(cur_angle*(M_PI/180))*timer - 0.5*timer*timer;
+        cannonX=startX+ux;
+        cannonY=startY+uy;
+    }
     // clear the color and depth in the frame buffer
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // use the loaded shader program
     // Don't change unless you know what you are doing
     glUseProgram (programID);
-
-    // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
-    // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (0, 0, 0);
-    // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
-    glm::vec3 up (0, 1, 0);
-
-    // Compute Camera matrix (view)
-    // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
-    //  Don't change unless you are sure!!
-    Matrices.view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
-
-    // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
-    //  Don't change unless you are sure!!
-    glm::mat4 VP = Matrices.projection * Matrices.view;
-
-    // Send our transformation to the currently bound shader, in the "MVP" uniform
-    // For each model you render, since the MVP will be different (at least the M part)
-    //  Don't change unless you are sure!!
-    glm::mat4 MVP;	// MVP = Projection * View * Model
-
-    // Load identity to model matrix
-
-    /* Render your scene */
-
-    //For Walls
-    Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translateTriangle = glm::translate (glm::vec3(0, 0, 0)); // glTranslatef
-    //    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-    glm::mat4 triangleTransform = translateTriangle;
-    Matrices.model *= triangleTransform; 
-    MVP = VP * Matrices.model; // MVP = p * V * M
-
-    //  Don't change unless you are sure!!
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-    draw3DObject(leftWall);
-    draw3DObject(rightWall);
-    draw3DObject(bottomWall);
-    draw3DObject(topWall);
-
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    //draw3DObject(rectangle);
-
-    // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
-    // glPopMatrix ();
-    Matrices.model = glm::mat4(1.0f);
-    if(buttonPressed==1)
-    {
-        uy-=0.05;
-        if(cannonY<0)
-        {
-            ux=0;
-            uy=0;
-        }
-        if(cannonX>=5.2)
-        {
-            ux=-ux;
-        }
-        cannonX+=ux;
-        cannonY+=uy;
-    }
- //   cout << cannonX << " " << cannonY << endl;
-    glm::mat4 translateRectangle = glm::translate (glm::vec3(cannonX, cannonY, 0));   // glTranslatef
-    //  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-    Matrices.model *= translateRectangle;
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(rectangle);
-
-    // Increment angles
-    float increments = 1;
-
-    //camera_rotation_angle++; // Simulating camera rotation
-    triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
-    rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
-
+    drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+    //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -669,7 +578,7 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
     // Create the models
     createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-    createRectangle ();
+    rectangle=createRectangle(50,50);
     createWalls();
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -694,8 +603,8 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-    int width = 600;
-    int height = 600;
+    int width = 801;
+    int height = 601;
 
     GLFWwindow* window = initGLFW(width, height);
 
@@ -714,10 +623,7 @@ int main (int argc, char** argv)
 
         // Poll for Keyboard and mouse events
         glfwPollEvents();
-        if(buttonPressed==0)
-        {
-            glfwGetCursorPos(window,&xmousePos,&ymousePos);
-        }
+        glfwGetCursorPos(window,&xmousePos,&ymousePos);
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
         if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
