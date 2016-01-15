@@ -214,21 +214,16 @@ float D2R(float A)
 }
 
 
-/**************************
- * Customizable functions *
- **************************/
+/*--------------------------------------------------------- CHANGEABLE FUNCTIONS ---------------------------------------------------------*/
+
 
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = true;
 bool rectangle_rot_status = true;
 
-/* Executed when a regular key is pressed/released/held-down */
-/* Prefered for Keyboard events */
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    // Function is called first on GLFW_PRESS.
-
     if (action == GLFW_RELEASE) {
         switch (key) {
             case GLFW_KEY_C:
@@ -273,10 +268,10 @@ double xmousePos=0,ymousePos=0;
 double cur_angle=0;
 
 int mouseState=0,buttonPressed=0;
-double cannonX=-150,cannonY=-230;
+double cannonX=-360,cannonY=-280;
 double startX=cannonX,startY=cannonY;
 double timer=0;
-/* Executed when a mouse button is pressed/released */
+
 void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
@@ -335,7 +330,6 @@ VAO *leftWall,*rightWall,*bottomWall,*topWall;
 void createTriangle ()
 {
     /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
-
     /* Define vertex array as used in glBegin (GL_TRIANGLES) */
     GLfloat vertex_buffer_data [] = {
         0, 1,0, // vertex 0
@@ -379,105 +373,10 @@ VAO* createRectangle(float x,float y)
     return create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-
-pair <float,float> wallPosition[4][6];
-
-void createWalls()
-{
-    //Left Wall
-    GLfloat vertex_buffer_data_left [] = {
-        -400,-400,0, // vertex 1
-        -400,400,0, // vertex 2
-        -370,400,0, // vertex 3
-
-        -370,400,0, // vertex 3
-        -370,-400,0, // vertex 4
-        -400,-400,0  // vertex 1
-    };
-    GLfloat color_buffer_data_left [] = {
-        1,0,0, // color 1
-        1,0,0, // color 2
-        1,0,0, // color 3
-        1,0,0, // color 3
-        1,0,0, // color 4
-        1,0,0  // color 1
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    leftWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_left, color_buffer_data_left, GL_FILL);
-
-    //Right Wall
-    GLfloat vertex_buffer_data_right [] = {
-        400,400,0, // vertex 1
-        400,-400,0, // vertex 2
-        370,-400,0, // vertex 3
-
-        370,-400,0, // vertex 3
-        370,400,0, // vertex 4
-        400,400,0  // vertex 1
-    };
-    GLfloat color_buffer_data_right [] = {
-        1,0,0, // color 1
-        1,0,0, // color 2
-        1,0,0, // color 3
-        1,0,0, // color 3
-        1,0,0, // color 4
-        1,0,0  // color 1
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    rightWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_right, color_buffer_data_right, GL_FILL);
-
-    //ceiling
-    GLfloat vertex_buffer_data_floor [] = {
-        -400,270,0, // vertex 1
-        -400,300,0, // vertex 2
-        400,300,0, // vertex 3
-
-        400,300,0, // vertex 3
-        400,270,0, // vertex 4
-        -400,270,0  // vertex 1
-    };
-    GLfloat color_buffer_data_floor [] = {
-        1,0,0, // color 1
-        1,0,0, // color 2
-        1,0,0, // color 3
-        1,0,0, // color 3
-        1,0,0, // color 4
-        1,0,0  // color 1
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    bottomWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_floor, color_buffer_data_floor, GL_FILL);
-
-    //floor
-    GLfloat vertex_buffer_data_ceiling [] = {
-        400,-270,0, // vertex 1
-        400,-300,0, // vertex 2
-        -400,-300,0, // vertex 3
-
-        -400,-300,0, // vertex 3
-        -400,-270,0, // vertex 4
-        400,-270,0  // vertex 1
-    };
-    GLfloat color_buffer_data_ceiling [] = {
-        1,0,0, // color 1
-        1,0,0, // color 2
-        1,0,0, // color 3
-        1,0,0, // color 3
-        1,0,0, // color 4
-        1,0,0  // color 1
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    topWall = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_ceiling, color_buffer_data_ceiling, GL_FILL);
-}
-
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
 int flag=0,count=0,fall=0;
-
 
 void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
 {
@@ -506,7 +405,8 @@ void draw ()
         }
         double u=20;
         cout << "mouse " << xmousePos << " " << ymousePos << endl;
-        cur_angle=atan2((530-ymousePos),(xmousePos-250))*(180/M_PI);
+        //y=(height/2)-canonYpos-ymousepos x=xmousepos-((width/2)+canonXpos)
+        cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         cout << cur_angle << endl;
         ux=u*cos(cur_angle*(M_PI/180))*timer;
         uy=u*sin(cur_angle*(M_PI/180))*timer - 0.5*timer*timer;
@@ -519,7 +419,10 @@ void draw ()
     // use the loaded shader program
     // Don't change unless you know what you are doing
     glUseProgram (programID);
+
+    //1st glm::vec3(xpos,ypos), 2nd glm::vec3(rotate about) 
     drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+    drawobject(bottomWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
     //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
 
@@ -578,13 +481,14 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
     // Create the models
     createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-    rectangle=createRectangle(50,50);
-    createWalls();
+
+    //set sizes length,breadth
+    rectangle=createRectangle(10,10);
+    bottomWall=createRectangle(10,500);
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
-
 
     reshapeWindow (window, width, height);
 
