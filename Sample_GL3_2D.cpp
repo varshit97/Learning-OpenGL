@@ -283,6 +283,7 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
             }
             if(action==GLFW_PRESS)
             {
+                buttonPressed=1;
                 mouseState=1;
             }
             break;
@@ -398,12 +399,13 @@ void draw ()
 {
     if(buttonPressed==1)
     {
-        timer+=0.1;
-        if(timer>40)
+        timer+=0.5;
+        double speed=xmousePos-startX;
+        double u=20*(speed/400);
+        if(timer>2*u*sin(cur_angle*(M_PI/180)))
         {
             buttonPressed=0;
         }
-        double u=20;
         cout << "mouse " << xmousePos << " " << ymousePos << endl;
         //y=(height/2)-canonYpos-ymousepos x=xmousepos-((width/2)+canonXpos)
         cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
