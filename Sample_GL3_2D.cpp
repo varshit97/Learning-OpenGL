@@ -398,7 +398,7 @@ void draw ()
 {
     if(buttonPressed==1)
     {
-        timer+=0.5;
+        timer+=0.1;
         if(timer>40)
         {
             buttonPressed=0;
