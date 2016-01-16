@@ -269,7 +269,7 @@ double cur_angle=0;
 
 int mouseState=0,buttonPressed=0;
 double wheel1X=-330,wheel1Y=-240;
-double cannonX=wheel1X,cannonY=wheel1Y;
+double cannonX=0,cannonY=0;
 double startX=cannonX,startY=cannonY;
 double timer=0;
 
@@ -386,26 +386,34 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
 }
 
 double rotateBarrel=0,prevBAngle;
-
+double prevCannonX,prevCannonY;
+double xpos;
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw ()
 {
-    rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+    if(buttonPressed==0)
+    {
+        rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+        cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+        startX=cannonX=-280+60*cos(rotateBarrel*(M_PI/180));
+        startY=cannonY=-210+60*sin(rotateBarrel*(M_PI/180));
+        xpos=xmousePos;
+    }
     //cout << "barrel angle " << rotateBarrel << endl;
+    //cout << buttonPressed << endl;
     if(buttonPressed==1)
     {
         timer+=0.5;
-        double speed=xmousePos-startX;
+        double speed=xpos-startX;
         double u=20*(speed/400);
-        if(timer>2*u*sin(cur_angle*(M_PI/180)))
+        if(timer>2*u*sin(cur_angle*(M_PI/180))+10)
         {
             buttonPressed=0;
+            timer=0;
         }
-        //cout << "mouse " << xmousePos << " " << ymousePos << endl;
+
         //y=(height/2)-canonYpos-ymousepos x=xmousepos-((width/2)+canonXpos)
-        cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
-        cout << cur_angle << endl;
         ux=u*cos(cur_angle*(M_PI/180))*timer;
         uy=u*sin(cur_angle*(M_PI/180))*timer - 0.5*timer*timer;
         cannonX=startX+ux;
@@ -419,29 +427,42 @@ void draw ()
     glUseProgram (programID);
 
     //1st glm::vec3(xpos,ypos), 2nd glm::vec3(rotate about) 
-    drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+    //projectile
+
+    //Semi circle
     for(int k=0;k<180;k++)
     {
-        drawobject(tankhead,glm::vec3(-233,-240,0),k,glm::vec3(0,0,1));
+        drawobject(tankhead,glm::vec3(-280,-210,0),k,glm::vec3(0,0,1));
     }
+    //Left Wall
     drawobject(bottomWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
+    //Left Wheel
     for(int i=0;i<360;i++)
     {
         drawobject(wheel1,glm::vec3(wheel1X,wheel1Y,0),i,glm::vec3(0,0,1));
     }
+    //Right Wheel
     for(int j=0;j<360;j++)
     {
         drawobject(wheel2,glm::vec3(-235,-240,0),j,glm::vec3(0,0,1));
     }
+    //Joining wheels
     drawobject(barrel,glm::vec3(-285,-240,0),0,glm::vec3(0,0,1));
+    //Cannon Barrel
     if(rotateBarrel>=25.0052 && rotateBarrel<=158.189)
     {
-        drawobject(firebarrel,glm::vec3(wheel1X+50+40*cos(rotateBarrel*(M_PI/180)),wheel1Y+40*sin(rotateBarrel*(M_PI/180)),0),rotateBarrel,glm::vec3(0,0,1));
+        drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+        rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+        drawobject(firebarrel,glm::vec3(-280+40*cos(rotateBarrel*(M_PI/180)),-210+40*sin(rotateBarrel*(M_PI/180)),0),rotateBarrel,glm::vec3(0,0,1));
         prevBAngle=rotateBarrel;
+        prevCannonX=cannonX;
+        prevCannonY=cannonY;
     }
     else
     {
-        drawobject(firebarrel,glm::vec3(wheel1X+50+40*cos(prevBAngle*(M_PI/180)),wheel1Y+40*sin(prevBAngle*(M_PI/180)),0),prevBAngle,glm::vec3(0,0,1));
+        drawobject(rectangle,glm::vec3(prevCannonX,prevCannonY,0),0,glm::vec3(0,0,1));
+        rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+        drawobject(firebarrel,glm::vec3(-280+40*cos(prevBAngle*(M_PI/180)),-210+40*sin(prevBAngle*(M_PI/180)),0),prevBAngle,glm::vec3(0,0,1));
     }
     //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
