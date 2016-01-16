@@ -387,9 +387,11 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
 
 double rotateBarrel=0,prevBAngle;
 double prevCannonX,prevCannonY;
-double xpos;
+double xpos,prevPX,prevPY;
+
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
+
 void draw ()
 {
     if(buttonPressed==0)
@@ -418,7 +420,10 @@ void draw ()
         uy=u*sin(cur_angle*(M_PI/180))*timer - 0.5*timer*timer;
         cannonX=startX+ux;
         cannonY=startY+uy;
-    }
+        prevPX=cannonX;
+        prevPY=cannonY;
+        cout << cannonX << " " << cannonY << endl;
+    } 
     // clear the color and depth in the frame buffer
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -435,7 +440,13 @@ void draw ()
         drawobject(tankhead,glm::vec3(-280,-210,0),k,glm::vec3(0,0,1));
     }
     //Left Wall
-    drawobject(bottomWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
+    drawobject(leftWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
+    //bottom Wall
+    drawobject(bottomWall,glm::vec3(0,-290,0),0,glm::vec3(0,0,1));
+    //Top wall
+    drawobject(topWall,glm::vec3(0,290,0),0,glm::vec3(0,0,1));
+    //Right wall
+    drawobject(rightWall,glm::vec3(390,50,0),0,glm::vec3(0,0,1));
     //Left Wheel
     for(int i=0;i<360;i++)
     {
@@ -529,7 +540,10 @@ void initGL (GLFWwindow* window, int width, int height)
     tankhead=createSector(30,25);
     //set sizes length,breadth
     rectangle=createRectangle(10,10);
-    bottomWall=createRectangle(10,500);
+    leftWall=createRectangle(10,500);
+    bottomWall=createRectangle(500,10);
+    topWall=createRectangle(500,10);
+    rightWall=createRectangle(10,500);
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
