@@ -268,7 +268,8 @@ double xmousePos=0,ymousePos=0;
 double cur_angle=0;
 
 int mouseState=0,buttonPressed=0;
-double cannonX=-360,cannonY=-280;
+double wheel1X=-330,wheel1Y=-240;
+double cannonX=wheel1X,cannonY=wheel1Y;
 double startX=cannonX,startY=cannonY;
 double timer=0;
 
@@ -326,7 +327,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
 
 //Define shapes
 VAO *triangle, *rectangle,*wheel1,*wheel2,*barrel,*firebarrel;
-VAO *leftWall,*rightWall,*bottomWall,*topWall;
+VAO *leftWall,*rightWall,*bottomWall,*topWall,*tankhead;
 
 // Creates the triangle object used in this sample code
 VAO* createSector(float R,int parts)
@@ -342,7 +343,7 @@ VAO* createSector(float R,int parts)
 // Creates the rectangle object used in this sample code
 VAO* createRectangle(float x,float y)
 {
-    const GLfloat vertex_buffer_data [] = {
+    GLfloat vertex_buffer_data [] = {
         -x,-y,0.0, // vertex 1
         x,-y,0.0, // vertex 2
         x, y,0.0, // vertex 3
@@ -352,7 +353,7 @@ VAO* createRectangle(float x,float y)
         -x,-y,0.0  // vertex 1
     };
 
-    static const GLfloat color_buffer_data [] = {
+    GLfloat color_buffer_data [] = {
         1,0,0, // color 1
         1,0,0, // color 2
         1,0,0, // color 3
@@ -384,13 +385,14 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     draw3DObject(obj);
 }
 
-double rotateBarrel=0;
+double rotateBarrel=0,prevBAngle;
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw ()
 {
     rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
+    //cout << "barrel angle " << rotateBarrel << endl;
     if(buttonPressed==1)
     {
         timer+=0.5;
@@ -418,17 +420,29 @@ void draw ()
 
     //1st glm::vec3(xpos,ypos), 2nd glm::vec3(rotate about) 
     drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+    for(int k=0;k<180;k++)
+    {
+        drawobject(tankhead,glm::vec3(-233,-240,0),k,glm::vec3(0,0,1));
+    }
     drawobject(bottomWall,glm::vec3(-390,50,0),0,glm::vec3(0,0,1));
     for(int i=0;i<360;i++)
     {
-        drawobject(wheel1,glm::vec3(-330,-240,0),i,glm::vec3(0,0,1));
+        drawobject(wheel1,glm::vec3(wheel1X,wheel1Y,0),i,glm::vec3(0,0,1));
     }
     for(int j=0;j<360;j++)
     {
         drawobject(wheel2,glm::vec3(-235,-240,0),j,glm::vec3(0,0,1));
     }
-    drawobject(barrel,glm::vec3(-285,-210,0),0,glm::vec3(0,0,1));
-    drawobject(firebarrel,glm::vec3(-315,-200,0),rotateBarrel,glm::vec3(0,0,1));
+    drawobject(barrel,glm::vec3(-285,-240,0),0,glm::vec3(0,0,1));
+    if(rotateBarrel>=25.0052 && rotateBarrel<=158.189)
+    {
+        drawobject(firebarrel,glm::vec3(wheel1X+50+40*cos(rotateBarrel*(M_PI/180)),wheel1Y+40*sin(rotateBarrel*(M_PI/180)),0),rotateBarrel,glm::vec3(0,0,1));
+        prevBAngle=rotateBarrel;
+    }
+    else
+    {
+        drawobject(firebarrel,glm::vec3(wheel1X+50+40*cos(prevBAngle*(M_PI/180)),wheel1Y+40*sin(prevBAngle*(M_PI/180)),0),prevBAngle,glm::vec3(0,0,1));
+    }
     //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
 
@@ -487,10 +501,11 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
     // Create the models
     // For the cannon base
-    wheel1=createSector(40,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-    wheel2=createSector(40,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-    barrel=createRectangle(50,10);
+    wheel1=createSector(30,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+    wheel2=createSector(30,18); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+    barrel=createRectangle(50,30);
     firebarrel=createRectangle(60,10);
+    tankhead=createSector(30,25);
     //set sizes length,breadth
     rectangle=createRectangle(10,10);
     bottomWall=createRectangle(10,500);
