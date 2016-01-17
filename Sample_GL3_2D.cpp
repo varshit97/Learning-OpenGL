@@ -462,7 +462,10 @@ void draw ()
     //Cannon Barrel
     if(rotateBarrel>=25.0052 && rotateBarrel<=158.189)
     {
-        drawobject(rectangle,glm::vec3(cannonX,cannonY,0),0,glm::vec3(0,0,1));
+        for(int i=0;i<360;i++)
+        {
+            drawobject(rectangle,glm::vec3(cannonX,cannonY,0),i,glm::vec3(0,0,1));
+        }
         rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         drawobject(firebarrel,glm::vec3(-280+40*cos(rotateBarrel*(M_PI/180)),-210+40*sin(rotateBarrel*(M_PI/180)),0),rotateBarrel,glm::vec3(0,0,1));
         prevBAngle=rotateBarrel;
@@ -471,7 +474,10 @@ void draw ()
     }
     else
     {
-        drawobject(rectangle,glm::vec3(prevCannonX,prevCannonY,0),0,glm::vec3(0,0,1));
+        for(int i=0;i<360;i++)
+        {
+            drawobject(rectangle,glm::vec3(prevCannonX,prevCannonY,0),i,glm::vec3(0,0,1));
+        }
         rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         drawobject(firebarrel,glm::vec3(-280+40*cos(prevBAngle*(M_PI/180)),-210+40*sin(prevBAngle*(M_PI/180)),0),prevBAngle,glm::vec3(0,0,1));
     }
@@ -539,7 +545,7 @@ void initGL (GLFWwindow* window, int width, int height)
     firebarrel=createRectangle(60,10);
     tankhead=createSector(30,25);
     //set sizes length,breadth
-    rectangle=createRectangle(10,10);
+    rectangle=createSector(10,18);
     leftWall=createRectangle(10,500);
     bottomWall=createRectangle(500,10);
     topWall=createRectangle(500,10);
