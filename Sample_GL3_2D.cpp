@@ -213,6 +213,90 @@ float D2R(float A)
     return (A*PI)/180.0f;
 }
 
+typedef pair< float, float > dub;
+typedef pair< dub ,float > tup;
+#define F first
+#define S second
+#define mp make_pair
+#define pb push_back
+
+vector< tup > centre[1000];
+glm::vec3 trans[1000];
+float rotat[1000];
+VAO* objects[1000];
+float velx[1000];
+float vely[1000];
+bool movable[1000];
+float Timer[1000];
+float Mass[1000];
+float COR=0.6f;
+float startX[1000];
+float startY[1000];
+float currentX[1000];
+float currentY[1000];
+float ADG=1.0f;
+float tick=0.3f;
+
+float sqr(float x)
+{
+    return x*x;
+}
+float dis(dub p,dub q)
+{
+    return sqr(p.F-q.F)+sqr(p.S-q.S);
+}
+int collided(tup p,tup q)
+{
+    float cdis=dis(p.F,q.F);
+    float rsum=sqr(p.S+q.S);
+    if(cdis<=rsum)
+        return 1;
+    else
+        return 0;
+}
+
+bool checkCollision(int i,int j)
+{
+    float R;
+    tup A,B,V;
+    for(int k=0;k<centre[i].size();k++)
+    {
+        for(int l=0;l<centre[j].size();l++)
+        {
+            V=centre[i][k];
+            R=V.F.F;
+            A.F.F=trans[i][0]+R*cos(D2R(formatAngle(rotat[i])));
+            A.F.S=trans[i][1]+R*sin(D2R(formatAngle(rotat[i])));
+            A.S=V.S;
+
+            V=centre[j][l];
+            R=V.F.F;
+            B.F.F=trans[j][0]+R*cos(D2R(formatAngle(rotat[j])));
+            B.F.S=trans[j][1]+R*sin(D2R(formatAngle(rotat[j])));
+            B.S=V.S;
+            if(collided(A,B))
+            {
+                //cout << currentX[0] << " " << currentY[0] << "\n";
+                //cout << A.F.F << " " << A.F.S << " " << A.S << "\n";
+                //cout << B.F.F << " " << B.F.S << " " << B.S << "\n";
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void divideRect(int i,float width,float height)
+{
+    for(int j=0;j<(int)(width/(2.0*height));j++)
+    {
+        centre[i].pb(mp(mp(-(2.0f*j+1.0f)*height,0.0f),height));
+    }
+    for(int j=0;j<(int)(width/(2.0*height));j++)
+    {
+        centre[i].pb(mp(mp((2.0f*j+1.0f)*height,0.0f),height));
+    }
+}
 
 /*--------------------------------------------------------- CHANGEABLE FUNCTIONS ---------------------------------------------------------*/
 
@@ -263,15 +347,15 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     }
 }
 
-double ux=30,uy=60;
+float ux=30,uy=60;
 double xmousePos=0,ymousePos=0;
-double cur_angle=0;
+float cur_angle=0;
 
 int mouseState=0,buttonPressed=0;
-double wheel1X=-330,wheel1Y=-240;
-double cannonX=0,cannonY=0;
-double startX=cannonX,startY=cannonY;
-double timer=0;
+float wheel1X=-330,wheel1Y=-240;
+float cannonX=0,cannonY=0;
+float constStartX=cannonX,constStartY=cannonY;
+float timer=0;
 
 void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
@@ -332,12 +416,12 @@ VAO *leftWall,*rightWall,*bottomWall,*topWall,*tankhead;
 // Creates the triangle object used in this sample code
 VAO* createSector(float R,int parts)
 {
-	float diff=360.0f/parts;
-	float A1=formatAngle(-diff/2);
-	float A2=formatAngle(diff/2);
-	GLfloat vertex_buffer_data[]={0.0f,0.0f,0.0f,R*cos(D2R(A1)),R*sin(D2R(A1)),0.0f,R*cos(D2R(A2)),R*sin(D2R(A2)),0.0f};
-	GLfloat color_buffer_data[]={1,0,0,1,0,0,1,0,0};
-	return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,color_buffer_data,GL_FILL);
+    float diff=360.0f/parts;
+    float A1=formatAngle(-diff/2);
+    float A2=formatAngle(diff/2);
+    GLfloat vertex_buffer_data[]={0.0f,0.0f,0.0f,R*cos(D2R(A1)),R*sin(D2R(A1)),0.0f,R*cos(D2R(A2)),R*sin(D2R(A2)),0.0f};
+    GLfloat color_buffer_data[]={1,0,0,1,0,0,1,0,0};
+    return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,color_buffer_data,GL_FILL);
 }
 
 // Creates the rectangle object used in this sample code
@@ -369,7 +453,7 @@ VAO* createRectangle(float x,float y)
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
-int flag=0,count=0,fall=0;
+int count=0,fall=0;
 
 void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
 {
@@ -385,9 +469,146 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     draw3DObject(obj);
 }
 
-double rotateBarrel=0,prevBAngle;
-double prevCannonX,prevCannonY;
-double xpos,prevPX,prevPY;
+
+float EKMT(float K,float M,float T)
+{
+    return exp(-((K/M)*T));
+}
+float xvel(float V0,float K,float M,float T)
+{
+    return V0*EKMT(K,M,T);
+}
+float xdis(float V0,float K,float M,float T)
+{
+    return ((M/K)*V0)*(1.0f-EKMT(K,M,T));
+}
+float yvel(float V0,float K,float M,float T,float G)
+{
+    return ((V0+((M*G)/K))*EKMT(K,M,T))-((M*G)/K);
+}
+float ydis(float V0,float K,float M,float T,float G)
+{
+    return ((M/K)*(V0+((M*G)/K))*(1-EKMT(K,M,T)))-((M*G*T)/K);
+}
+float equilib(int i)
+{
+    return (Mass[i]/0.3f)*((vely[i]*0.3f+1.0f)/(Mass[i]*ADG));
+}
+/* Render the scene with openGL */
+void conserveMomentum(int i,int j)
+{
+    float u1,u2,v1,v2;
+    u1=xvel(velx[i],0.3f,Mass[i],Timer[i]);
+    u2=xvel(velx[j],0.3f,Mass[j],Timer[j]);
+    v1=(((Mass[i]-COR*Mass[j])*u1)/(Mass[i]+Mass[j]))+(((Mass[j]+COR*Mass[j])*u2)/(Mass[i]+Mass[j]));
+    v2=u1*COR-u2*COR+v1;
+    velx[i]=v1;
+    velx[j]=v2;
+    u1=yvel(vely[i],0.3f,Mass[i],Timer[i],ADG);
+    u2=yvel(vely[j],0.3f,Mass[j],Timer[j],ADG);
+    v1=(((Mass[i]-COR*Mass[j])*u1)/(Mass[i]+Mass[j]))+(((Mass[j]+COR*Mass[j])*u2)/(Mass[i]+Mass[j]));
+    v2=u1*COR-u2*COR+v1;
+    vely[i]=v1;
+    vely[j]=v2;
+}
+bool flag=true;
+void applyCollisions()
+{
+    for(int i=0;i<2;i++)
+    {
+        for(int j=i+1;j<2;j++)
+        {
+            if( ((velx[i]!=0 || vely[i]!=0) || (velx[j]!=0 || vely[j]!=0) ) && (movable[i] || movable[j]) && checkCollision(i,j) )
+            {
+                if(!movable[i])
+                {
+                    if(i==1)
+                    {
+                        vely[j]=-COR*yvel(vely[j],0.3f,Mass[j],Timer[j],ADG);
+                        startX[j]=trans[j][0];
+                        startY[j]=trans[j][1];
+                        Timer[j]=tick;
+                    }
+                }
+                //else if(!movable[j])
+                else if(!movable[j])
+                {
+                    if(j==1)
+                    {
+                        vely[i]=-COR*(vely[i]-ADG*Timer[i]);
+                        startX[i]=trans[i][0];
+                        startY[i]=trans[i][1];
+                        cout << startX[i] << " " << startY[i] << "\n";
+                        Timer[i]=0.0f;
+                        while(abs(yvel(vely[i],0.3f,Mass[i],Timer[i],ADG))>0.01f && checkCollision(i,j))
+                        {
+                            Timer[i]+=0.05f;
+                            trans[i][0]=currentX[i]=startX[i]+xdis(velx[i],0.3f,Mass[i],Timer[i]);
+                            trans[i][1]=currentY[i]=startY[i]+ydis(vely[i],0.3f,Mass[i],Timer[i],ADG);
+                        }
+                        cout << trans[i][0] << " a " <<trans[i][1] << "\n";
+                        cout << currentX[i] << " b " << currentY[i] << "\n";
+                    }
+                }
+                else if(movable[i] && movable[j])
+                {
+                    conserveMomentum(i,j);
+                    // Iterate over all objects to move time frame - TODO
+                    startX[i]=currentX[i];
+                    startY[i]=currentY[i];
+                    startX[j]=currentX[j];
+                    startY[j]=currentY[j];
+                    Timer[i]=tick;
+                    Timer[j]=tick;
+                    while(checkCollision(i,j))
+                    {
+                        Timer[i]+=0.05f;
+                        Timer[j]+=0.05f;
+                        trans[i][0]=currentX[i]=startX[i]+xdis(velx[i],0.3f,Mass[i],Timer[i]);
+                        trans[i][1]=currentY[i]=startY[i]+ydis(vely[i],0.3f,Mass[i],Timer[i],ADG);
+
+                        trans[j][0]=currentX[j]=startX[j]+xdis(velx[j],0.3f,Mass[j],Timer[j]);
+                        trans[j][1]=currentY[j]=startY[j]+ydis(vely[j],0.3f,Mass[j],Timer[j],ADG);
+                    }
+                    flag=false;
+                }
+            }
+        }
+    }
+}
+
+float rotateBarrel=0,prevBAngle;
+float prevCannonX,prevCannonY;
+float xpos,prevPX,prevPY;
+
+void updatePositions()
+{
+    if(1-buttonPressed)
+    {
+        currentX[0]=-280.f+40*cos(D2R(rotateBarrel));
+        currentY[0]=-210.0f+40*sin(D2R(rotateBarrel));
+        cout << currentX[0] << " update " << currentX[0] << endl;
+        startX[0]=currentX[0];
+        startY[0]=currentY[0];
+    }
+    for(int i=1-buttonPressed;i<3;i++)
+    {
+        float veloy=yvel(vely[i],0.3f,Mass[i],Timer[i],ADG);
+        float velox=xvel(velx[i],0.3f,Mass[i],Timer[i]);
+        if(i==0)
+        {
+        }
+        if(velx[i]!=0.0f || vely[i]!=0.0f)
+        {
+            currentX[i]=startX[i]+(velx[i]*Timer[i]);
+            currentY[i]=startY[i]+(vely[i]*Timer[i]-0.5*ADG*sqr(Timer[i]));
+            trans[i][0]=currentX[i];
+            trans[i][1]=currentY[i];
+            Timer[i]+=tick;
+        }
+    }
+
+}
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -398,32 +619,24 @@ void draw ()
     {
         rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         cur_angle=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
-        startX=cannonX=-280+60*cos(rotateBarrel*(M_PI/180));
-        startY=cannonY=-210+60*sin(rotateBarrel*(M_PI/180));
+        startX[0]=constStartX=cannonX=-280+60*cos(rotateBarrel*(M_PI/180));
+        startY[0]=constStartY=cannonY=-210+60*sin(rotateBarrel*(M_PI/180));
+        trans[0][0]=cannonX;
+        trans[0][1]=cannonY;
         xpos=xmousePos;
+        float speed=xpos-constStartX;
+        float u=20*(speed/400);
+        ux=u*cos(cur_angle*(M_PI/180));
+        uy=u*sin(cur_angle*(M_PI/180));
+        velx[0]=ux;
+        vely[0]=uy;
     }
-    //cout << "barrel angle " << rotateBarrel << endl;
-    //cout << buttonPressed << endl;
+
     if(buttonPressed==1)
     {
-        timer+=0.5;
-        double speed=xpos-startX;
-        double u=20*(speed/400);
-        if(timer>2*u*sin(cur_angle*(M_PI/180))+10)
-        {
-            buttonPressed=0;
-            timer=0;
-        }
-
-        //y=(height/2)-canonYpos-ymousepos x=xmousepos-((width/2)+canonXpos)
-        ux=u*cos(cur_angle*(M_PI/180))*timer;
-        uy=u*sin(cur_angle*(M_PI/180))*timer - 0.5*timer*timer;
-        cannonX=startX+ux;
-        cannonY=startY+uy;
-        prevPX=cannonX;
-        prevPY=cannonY;
-        cout << cannonX << " " << cannonY << endl;
-    } 
+        applyCollisions();
+    }
+    updatePositions();
     // clear the color and depth in the frame buffer
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -460,17 +673,17 @@ void draw ()
     //Joining wheels
     drawobject(barrel,glm::vec3(-285,-240,0),0,glm::vec3(0,0,1));
     //Cannon Barrel
-    if(rotateBarrel>=25.0052 && rotateBarrel<=158.189)
+    if(rotateBarrel>=25.0052 && rotateBarrel<=100)
     {
         for(int i=0;i<360;i++)
         {
-            drawobject(rectangle,glm::vec3(cannonX,cannonY,0),i,glm::vec3(0,0,1));
+            drawobject(rectangle,glm::vec3(trans[0][0],trans[0][1],0),i,glm::vec3(0,0,1));
         }
         rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         drawobject(firebarrel,glm::vec3(-280+40*cos(rotateBarrel*(M_PI/180)),-210+40*sin(rotateBarrel*(M_PI/180)),0),rotateBarrel,glm::vec3(0,0,1));
         prevBAngle=rotateBarrel;
-        prevCannonX=cannonX;
-        prevCannonY=cannonY;
+        prevCannonX=trans[0][0];
+        prevCannonY=trans[0][1];
     }
     else
     {
@@ -481,7 +694,7 @@ void draw ()
         rotateBarrel=atan2((530-ymousePos),(xmousePos-40))*(180/M_PI);
         drawobject(firebarrel,glm::vec3(-280+40*cos(prevBAngle*(M_PI/180)),-210+40*sin(prevBAngle*(M_PI/180)),0),prevBAngle,glm::vec3(0,0,1));
     }
-    //    cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
+    //cout << "cannon coordinates " << cannonX << " " << cannonY << endl;
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -546,10 +759,31 @@ void initGL (GLFWwindow* window, int width, int height)
     tankhead=createSector(30,25);
     //set sizes length,breadth
     rectangle=createSector(10,18);
+    objects[0]=rectangle;
+    centre[0].pb(mp(mp(0.0f,0.0f),12.0f));
+    trans[0]=glm::vec3(0.0f,0.0f,0.0f);
+    currentX[0]=0.0f;
+    currentY[0]=0.0f;
+    rotat[0]=0.0f;
+    movable[0]=true;
+    Mass[0]=200.0f;
+    Timer[0]=0.0f;
+    velx[0]=0.0f;
+    vely[0]=0.0f;
     leftWall=createRectangle(10,500);
     bottomWall=createRectangle(500,10);
+    objects[1]=bottomWall;
+    divideRect(1,500.0f,10.0f);
+    trans[1]=glm::vec3(0.0f,-290.0f,0.0f);
+    rotat[1]=0.0f;
+    movable[1]=false;
     topWall=createRectangle(500,10);
     rightWall=createRectangle(10,500);
+    objects[2]=rightWall;
+    divideRect(1,500.0f,10.0f);
+    trans[1]=glm::vec3(0.0f,-290.0f,0.0f);
+    rotat[1]=0.0f;
+    movable[1]=false;
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
@@ -579,7 +813,7 @@ int main (int argc, char** argv)
 
     initGL (window, width, height);
 
-    double last_update_time = glfwGetTime(), current_time;
+    float last_update_time = glfwGetTime(), current_time;
 
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
@@ -587,7 +821,7 @@ int main (int argc, char** argv)
         // OpenGL Draw commands
         draw();
 
-        // Swap Frame Buffer in double buffering
+        // Swap Frame Buffer in float buffering
         glfwSwapBuffers(window);
 
         // Poll for Keyboard and mouse events
