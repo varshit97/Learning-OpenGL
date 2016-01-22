@@ -283,13 +283,6 @@ void cursorPos(int x, int y)
     ymousepos=y;
     trans[9][0]=10*cos(D2R(60));
     trans[9][1]=10*sin(D2R(60));
-    /*if(atstart)
-    {
-        rotationAngle=(atan2(650.0f-y,x-100.0f)*180.0f)/PI;
-        dist=(650.0f-y)*(650.0f-y)+(x-100.0f)*(x-100.0f);
-        dist=min(dist,80000.0f);
-        velocity=(38.0f*dist)/80000.0f;
-    }*/
 }
 
 void reshapeWindow(int width, int height)
@@ -330,6 +323,21 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     glm::mat4 translatemat = glm::translate(trans);
     glm::mat4 rotatemat = glm::rotate(D2R(formatAngle(angle)), rotat);
     Matrices.model *= (translatemat * rotatemat);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(obj);
+}
+
+void trt(VAO* obj,double toX,double toY,double rot_angle,double width,double height)
+{
+    Matrices.view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    glm::mat4 VP = Matrices.projection * Matrices.view;
+    glm::mat4 MVP;  // MVP = Projection * View * Model
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translatepivot= glm::translate(glm::vec3(0,height/2,0));
+    glm::mat4 translatemat = glm::translate(glm::vec3(toX,toY-(height/2),0));
+    glm::mat4 rotatemat = glm::rotate(D2R(formatAngle(rot_angle)), glm::vec3(0,0,1));
+    Matrices.model *= (translatemat * rotatemat * translatepivot);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(obj);
@@ -383,7 +391,7 @@ void draw ()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram (programID);
     //Drawing objects
-    
+
     moveProjectile();
 
     //Walls
@@ -502,7 +510,7 @@ void initGL(int width, int height)
     trans[0]=glm::vec3(0.0f,-290.0f,0.0f);
     rotat[0]=0.0f;
     movable[0]=false;
-    
+
     //Right Wall
     objects[1]=createRectangle(10.0f,300.0f);
     divideRect(1,10.0f,300.0f);
@@ -521,7 +529,7 @@ void initGL(int width, int height)
     trans[3]=glm::vec3(-390.0f,0.0f,0.0f);
     rotat[3]=0.0f;
     movable[3]=false;
-    
+
     //Cannon
     //Circle
     objects[4]=createSector(20,18);
@@ -552,7 +560,7 @@ void initGL(int width, int height)
     trans[8]=glm::vec3(-296.0f,-140.0f,0.0f);
     rotat[8]=0.0f;
     movable[8]=false;
-    
+
     //Projectile
     objects[9]=createSector(10.0f,18);
     Mass[9]=250.0f;
@@ -560,7 +568,7 @@ void initGL(int width, int height)
     trans[9]=glm::vec3(0.0f,0.0f,0.0f);
     rotat[9]=0.0f;
     movable[9]=true;
-    
+
     //Pillar 1
     objects[10]=createRectangle(10,50);
     Mass[10]=250.0f;
@@ -568,7 +576,7 @@ void initGL(int width, int height)
     trans[10]=glm::vec3(-50.0f,-230.0f,0.0f);
     rotat[10]=0.0f;
     movable[10]=false;
-    
+
     //Pillar 2
     objects[11]=createRectangle(10,50);
     Mass[11]=250.0f;
@@ -582,7 +590,7 @@ void initGL(int width, int height)
     trans[12]=glm::vec3(120.0f,-250.0f,0.0f);
     rotat[12]=0.0f;
     movable[12]=false;
-    
+
     //Upper block
     objects[13]=createRectangle(20,20);
     trans[13]=glm::vec3(120.0f,-200.0f,0.0f);
