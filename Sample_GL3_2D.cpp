@@ -514,9 +514,9 @@ void conserveMomentum(int i,int j)
 bool flag=true;
 void applyCollisions()
 {
-    for(int i=0;i<2;i++)
+    for(int i=0;i<3;i++)
     {
-        for(int j=i+1;j<2;j++)
+        for(int j=i+1;j<3;j++)
         {
             if( ((velx[i]!=0 || vely[i]!=0) || (velx[j]!=0 || vely[j]!=0) ) && (movable[i] || movable[j]) && checkCollision(i,j) )
             {
@@ -541,6 +541,19 @@ void applyCollisions()
                         cout << startX[i] << " " << startY[i] << "\n";
                         Timer[i]=0.0f;
                         while(abs(yvel(vely[i],0.3f,Mass[i],Timer[i],ADG))>0.01f && checkCollision(i,j))
+                        {
+                            Timer[i]+=0.05f;
+                            trans[i][0]=currentX[i]=startX[i]+xdis(velx[i],0.3f,Mass[i],Timer[i]);
+                            trans[i][1]=currentY[i]=startY[i]+ydis(vely[i],0.3f,Mass[i],Timer[i],ADG);
+                        }
+                    }
+                    if(j==2)
+                    {
+                        velx[i]=-COR*xvel(velx[i],0.3f,Mass[i],Timer[i]);
+                        startX[i]=currentX[i];
+                        startY[i]=currentY[i];
+                        Timer[i]=0.0f;
+                        while(checkCollision(i,j))
                         {
                             Timer[i]+=0.05f;
                             trans[i][0]=currentX[i]=startX[i]+xdis(velx[i],0.3f,Mass[i],Timer[i]);
@@ -587,7 +600,6 @@ void updatePositions()
     {
         currentX[0]=-280.f+40*cos(D2R(rotateBarrel));
         currentY[0]=-210.0f+40*sin(D2R(rotateBarrel));
-        cout << currentX[0] << " update " << currentX[0] << endl;
         startX[0]=currentX[0];
         startY[0]=currentY[0];
     }
@@ -659,7 +671,7 @@ void draw ()
     //Top wall
     drawobject(topWall,glm::vec3(0,290,0),0,glm::vec3(0,0,1));
     //Right wall
-    drawobject(rightWall,glm::vec3(390,50,0),0,glm::vec3(0,0,1));
+    drawobject(rightWall,glm::vec3(390,50,0),90,glm::vec3(0,0,1));
     //Left Wheel
     for(int i=0;i<360;i++)
     {
@@ -771,19 +783,19 @@ void initGL (GLFWwindow* window, int width, int height)
     velx[0]=0.0f;
     vely[0]=0.0f;
     leftWall=createRectangle(10,500);
-    bottomWall=createRectangle(500,10);
+    bottomWall=createRectangle(400,10);
     objects[1]=bottomWall;
     divideRect(1,500.0f,10.0f);
     trans[1]=glm::vec3(0.0f,-290.0f,0.0f);
     rotat[1]=0.0f;
     movable[1]=false;
     topWall=createRectangle(500,10);
-    rightWall=createRectangle(10,500);
+    rightWall=createRectangle(350.0f,10.0f);
     objects[2]=rightWall;
-    divideRect(1,500.0f,10.0f);
-    trans[1]=glm::vec3(0.0f,-290.0f,0.0f);
-    rotat[1]=0.0f;
-    movable[1]=false;
+    divideRect(2,350.0f,10.0f);
+    trans[2]=glm::vec3(640.0f,0.0f,0.0f);
+    rotat[2]=90.0f;
+    movable[2]=false;
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
