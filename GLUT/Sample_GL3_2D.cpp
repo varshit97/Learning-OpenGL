@@ -252,6 +252,7 @@ void keyboardUp(unsigned char key, int x, int y)
 }
 
 int buttonPressed=0;
+bool visible=true;
 
 void keyboardSpecialDown(int key, int x, int y)
 {
@@ -260,15 +261,18 @@ void keyboardSpecialUp(int key, int x, int y)
 {
 }
 
-double rotateBarrel=5;
+double rotateBarrel;
 
 void mouseClick(int button, int state, int x, int y)
 {
     if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
     {
         buttonPressed=1;
+        visible=true;
         velx[9]=20*(cos(D2R(rotateBarrel)));
         vely[9]=20*(sin(D2R(rotateBarrel)));
+        trans[9][0]=-314;
+        trans[9][0]=-180;
         Timer[9]=0.0f;
     }
     cerr << x << y << "\n";
@@ -398,7 +402,8 @@ void draw ()
     //Drawing objects
 
     moveProjectile();
-    if(checkCollision(9,10))
+    //Topple projectile
+    if(checkCollision(9,10) && temp==false)
     {
         temp=true;
         velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
@@ -407,16 +412,18 @@ void draw ()
         startY[9]=trans[9][1];
         Timer[9]=tick;
     }
+    //Reflect from floor
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,0))
     {
         velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        if((vely[9]<2.0f) && checkCollision(9,0))
+        if((vely[9]<1.0f) && checkCollision(9,0))
         {
             trans[9][1]=-270.0f;
             velx[9]=0.0f;
             vely[9]=0.0f;
             Timer[9]=0.0f;
+            visible=false;
         }
         else
         {
@@ -426,15 +433,46 @@ void draw ()
             Timer[9]=tick;
         }
     }
+    //Reflect from upper block
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,13))
+    {
+        velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if((vely[9]<1.0f) && checkCollision(9,0))
+        {
+            trans[9][1]=-230.0f;
+            velx[9]=0.0f;
+            vely[9]=0.0f;
+            Timer[9]=0.0f;
+            visible=false;
+        }
+        else
+        {
+            trans[9][1]=-218.0f;
+            startX[9]=trans[9][0];
+            startY[9]=trans[9][1];
+            Timer[9]=tick;
+        }
+    }
+    //Reflect from right wall
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,1))
+    {
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        trans[9][0]=375.0f;
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
     //Walls
     //Floor
-    drawobject(objects[0],trans[0],0,glm::vec3(0,0,1));   
+    drawobject(objects[0],trans[0],rotat[0],glm::vec3(0,0,1));   
     //Right Wall
-    drawobject(objects[1],trans[1],0,glm::vec3(0,0,1));   
+    drawobject(objects[1],trans[1],rotat[1],glm::vec3(0,0,1));   
     //Top Wall
-    drawobject(objects[2],trans[2],0,glm::vec3(0,0,1));   
+    drawobject(objects[2],trans[2],rotat[2],glm::vec3(0,0,1));   
     //Left Wall
-    drawobject(objects[3],trans[3],0,glm::vec3(0,0,1));   
+    drawobject(objects[3],trans[3],rotat[3],glm::vec3(0,0,1));   
 
     //Cannon
     //Circle
@@ -443,7 +481,7 @@ void draw ()
         drawobject(objects[4],trans[4],i,glm::vec3(0,0,1));   
     }
     //Rectangle
-    drawobject(objects[5],trans[5],0,glm::vec3(0,0,1));   
+    drawobject(objects[5],trans[5],rotat[5],glm::vec3(0,0,1));   
     //Circle
     for(int i=1;i<360;i++)
     {
@@ -455,12 +493,12 @@ void draw ()
         drawobject(objects[7],trans[7],i,glm::vec3(0,0,1));   
     }
     //Barrel
-    rotateBarrel=atan2((-ymousepos+530),(xmousepos-40))*(180/M_PI);
+    rotateBarrel=atan2((-ymousepos+300-trans[7][1]),(xmousepos-400-trans[7][0]))*(180/M_PI);
     trans[8][0]=trans[7][0]+50*cos(rotateBarrel*(M_PI/180));
     trans[8][1]=trans[7][1]+50*sin(rotateBarrel*(M_PI/180));
     drawobject(objects[8],trans[8],rotateBarrel,glm::vec3(0,0,1));
     //Projectile
-    for(int i=1;i<360;i++)
+    for(int i=1;i<360 && visible;i++)
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
     }
@@ -569,10 +607,10 @@ void initGL(int width, int height)
     movable[0]=false;
 
     //Right Wall
-    objects[1]=createRectangle(10.0f,300.0f);
-    divideRect(1,10.0f,300.0f);
+    objects[1]=createRectangle(300.0f,10.0f);
+    divideRect(1,300.0f,10.0f);
     trans[1]=glm::vec3(390.0f,0.0f,0.0f);
-    rotat[1]=0.0f;
+    rotat[1]=90.0f;
     movable[1]=false;
     //Top wall 
     objects[2]=createRectangle(400.0f,10.0f);
@@ -657,7 +695,7 @@ void initGL(int width, int height)
     divideRect(3,20.0f,20.0f);
     trans[13]=glm::vec3(120.0f,-200.0f,0.0f);
     rotat[13]=0.0f;
-    movable[13]=false;
+    movable[13]=true;
 
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
