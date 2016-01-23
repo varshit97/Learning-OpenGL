@@ -403,6 +403,7 @@ void moveProjectile()
 }
 
 bool temp=false;
+int xpos=-320,max1=-10000;
 
 void draw ()
 {
@@ -525,16 +526,11 @@ void draw ()
         Timer[9]=tick;
     }
     //Power
-    int num=xmousepos/10,prevnum=0;
-    int k=1;
+    int num=((int)xmousepos%800)/4;
+    int prevnum=0;
     for(int j=0;j<num;j++)
     {
-        drawobject(objects[14],trans[14],rotat[14],glm::vec3(0,0,1));
-        if(num>prevnum)
-            k=1;
-        else if(num<prevnum)
-            k=-1;
-        trans[14][0]+=10*k;
+        drawobject(objects[14],glm::vec3(xpos+j,trans[14][1],0),rotat[14],glm::vec3(0,0,1));
     }
     prevnum=num;
     //Walls
@@ -776,7 +772,7 @@ void initGL(int width, int height)
     
     //Health Bar
     objects[14]=createRectangle(10,20);
-    trans[14]=glm::vec3(-350.0f,240.0f,0.0f);
+    trans[14]=glm::vec3(-320.0f,240.0f,0.0f);
     rotat[14]=0.0f;
     movable[14]=false;
     
