@@ -187,7 +187,7 @@ float equilib(int i)
     return (Mass[i]/0.3f)*((vely[i]*0.3f+1.0f)/(Mass[i]*ADG));
 }
 
-/*********************************** Collision Detection **************************************************/
+/*********************************************************** DETECTING COLLISIONS ***********************************************************/
 
 
 int collided(tup p,tup q)
@@ -259,13 +259,16 @@ void keyboardSpecialDown(int key, int x, int y)
 void keyboardSpecialUp(int key, int x, int y)
 {
 }
+
+double rotateBarrel=5;
+
 void mouseClick(int button, int state, int x, int y)
 {
     if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
     {
         buttonPressed=1;
-        velx[9]=20*(cos(D2R(60)));
-        vely[9]=20*(sin(D2R(60)));
+        velx[9]=20*(cos(D2R(rotateBarrel)));
+        vely[9]=20*(sin(D2R(rotateBarrel)));
         Timer[9]=0.0f;
     }
     cerr << x << y << "\n";
@@ -281,8 +284,8 @@ void cursorPos(int x, int y)
 {
     xmousepos=x;
     ymousepos=y;
-    trans[9][0]=10*cos(D2R(60));
-    trans[9][1]=10*sin(D2R(60));
+    trans[9][0]=10*cos(D2R(rotateBarrel));
+    trans[9][1]=10*sin(D2R(rotateBarrel));
 }
 
 void reshapeWindow(int width, int height)
@@ -332,11 +335,13 @@ void trt(VAO* obj,double toX,double toY,double rot_angle,double width,double hei
 {
     Matrices.view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
     glm::mat4 VP = Matrices.projection * Matrices.view;
-    glm::mat4 MVP;  // MVP = Projection * View * Model
+    glm::mat4 MVP;
     Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translatepivot= glm::translate(glm::vec3(0,height/2,0));
-    glm::mat4 translatemat = glm::translate(glm::vec3(toX,toY-(height/2),0));
+    glm::mat4 translatepivot= glm::translate(glm::vec3(width,height,0));
+    //glm::mat4 revtranslatepivot= glm::translate(glm::vec3(-width,-4*height,0));
+    glm::mat4 translatemat = glm::translate(glm::vec3(toX,toY,0));
     glm::mat4 rotatemat = glm::rotate(D2R(formatAngle(rot_angle)), glm::vec3(0,0,1));
+    //Matrices.model *= (translatemat * revtranslatepivot * rotatemat * translatepivot);
     Matrices.model *= (translatemat * rotatemat * translatepivot);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -359,8 +364,6 @@ void conserveMomentum(int i,int j)
     vely[i]=v1;
     vely[j]=v2;
 }
-
-double rotateBarrel=60;
 
 void moveProjectile()
 {
@@ -386,6 +389,8 @@ void moveProjectile()
     }
 }
 
+bool temp=false;
+
 void draw ()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -393,7 +398,34 @@ void draw ()
     //Drawing objects
 
     moveProjectile();
-
+    if(checkCollision(9,10))
+    {
+        temp=true;
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,0))
+    {
+        velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if((vely[9]<2.0f) && checkCollision(9,0))
+        {
+            trans[9][1]=-270.0f;
+            velx[9]=0.0f;
+            vely[9]=0.0f;
+            Timer[9]=0.0f;
+        }
+        else
+        {
+            trans[9][1]=-270.0f;
+            startX[9]=trans[9][0];
+            startY[9]=trans[9][1];
+            Timer[9]=tick;
+        }
+    }
     //Walls
     //Floor
     drawobject(objects[0],trans[0],0,glm::vec3(0,0,1));   
@@ -423,20 +455,45 @@ void draw ()
         drawobject(objects[7],trans[7],i,glm::vec3(0,0,1));   
     }
     //Barrel
+    rotateBarrel=atan2((-ymousepos+530),(xmousepos-40))*(180/M_PI);
+    trans[8][0]=trans[7][0]+50*cos(rotateBarrel*(M_PI/180));
+    trans[8][1]=trans[7][1]+50*sin(rotateBarrel*(M_PI/180));
     drawobject(objects[8],trans[8],rotateBarrel,glm::vec3(0,0,1));
     //Projectile
     for(int i=1;i<360;i++)
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
     }
+
     //Pillar 1
-    drawobject(objects[10],trans[10],0,glm::vec3(0,0,1));
+    //drawobject(objects[10],trans[10],0,glm::vec3(0,0,1));
     //Pillar 2
-    drawobject(objects[11],trans[11],0,glm::vec3(0,0,1));
+    //drawobject(objects[11],trans[11],0,glm::vec3(0,0,1));
     //Lower block
-    drawobject(objects[12],trans[12],0,glm::vec3(0,0,1));
+    //drawobject(objects[12],trans[12],0,glm::vec3(0,0,1));
     //Upper block
-    drawobject(objects[13],trans[13],0,glm::vec3(0,0,1));
+    //drawobject(objects[13],trans[13],0,glm::vec3(0,0,1));
+    for(int i=10;i<14;i++)
+    {
+        if(i==10 && temp)
+        {
+            rotat[i]-=1.0f;
+            if(rotat[i]==0)
+            {
+                trans[i][0]=5.0f;
+                trans[i][1]=-270.0f;
+                temp=false;
+                continue;
+            }
+            trans[i][0]=-45.0f;
+            trans[i][1]=-280.0f;
+            trt(objects[i],trans[i][0],trans[i][1],rotat[i],50.0f,10.0f);
+        }
+        else
+        {
+            drawobject(objects[i],trans[i],rotat[i],glm::vec3(0,0,1));
+        }
+    }
     glutSwapBuffers ();
 }
 
@@ -563,6 +620,7 @@ void initGL(int width, int height)
 
     //Projectile
     objects[9]=createSector(10.0f,18);
+    centre[9].pb(mp(mp(0.0f,0.0f),10.0f));
     Mass[9]=250.0f;
     velx[9]=vely[9]=0.0f;
     trans[9]=glm::vec3(0.0f,0.0f,0.0f);
@@ -570,15 +628,17 @@ void initGL(int width, int height)
     movable[9]=true;
 
     //Pillar 1
-    objects[10]=createRectangle(10,50);
-    Mass[10]=250.0f;
+    objects[10]=createRectangle(50,10);
+    divideRect(10,50.0f,10.0f);
+    Mass[10]=450.0f;
     velx[10]=vely[10]=0.0f;
     trans[10]=glm::vec3(-50.0f,-230.0f,0.0f);
-    rotat[10]=0.0f;
-    movable[10]=false;
+    rotat[10]=90.0f;
+    movable[10]=true;
 
     //Pillar 2
     objects[11]=createRectangle(10,50);
+    divideRect(3,10.0f,50.0f);
     Mass[11]=250.0f;
     velx[11]=vely[11]=0.0f;
     trans[11]=glm::vec3(280.0f,-230.0f,0.0f);
@@ -587,12 +647,14 @@ void initGL(int width, int height)
 
     //Lower block
     objects[12]=createRectangle(40,30);
+    divideRect(3,40.0f,30.0f);
     trans[12]=glm::vec3(120.0f,-250.0f,0.0f);
     rotat[12]=0.0f;
     movable[12]=false;
 
     //Upper block
     objects[13]=createRectangle(20,20);
+    divideRect(3,20.0f,20.0f);
     trans[13]=glm::vec3(120.0f,-200.0f,0.0f);
     rotat[13]=0.0f;
     movable[13]=false;
