@@ -261,18 +261,26 @@ void keyboardSpecialUp(int key, int x, int y)
 {
 }
 
-double rotateBarrel;
+float rotateBarrel;
+float speed;
+float xmousepos,ymousepos;
 
 void mouseClick(int button, int state, int x, int y)
 {
+    speed=30*(xmousepos/400);
     if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
     {
         buttonPressed=1;
-        visible=true;
-        velx[9]=20*(cos(D2R(rotateBarrel)));
-        vely[9]=20*(sin(D2R(rotateBarrel)));
-        trans[9][0]=-314;
-        trans[9][0]=-180;
+        velx[9]=speed*(cos(rotateBarrel*(M_PI/180)));
+        vely[9]=speed*(sin(rotateBarrel*(M_PI/180)));
+        Timer[9]=0.0f;
+    }
+    if(button==GLUT_RIGHT_BUTTON && state==GLUT_DOWN)
+    {
+        buttonPressed=0;
+        rotateBarrel=0.0f;
+        velx[9]=32.0f;
+        vely[9]=0.0f;
         Timer[9]=0.0f;
     }
     cerr << x << y << "\n";
@@ -282,14 +290,12 @@ void mouseMotion(int x, int y)
     cerr << x << y << "\n";
 }
 
-float xmousepos,ymousepos;
-
 void cursorPos(int x, int y)
 {
     xmousepos=x;
     ymousepos=y;
-    trans[9][0]=10*cos(D2R(rotateBarrel));
-    trans[9][1]=10*sin(D2R(rotateBarrel));
+    trans[9][0]=speed*cos(D2R(rotateBarrel));
+    trans[9][1]=speed*sin(D2R(rotateBarrel));
 }
 
 void reshapeWindow(int width, int height)
@@ -373,10 +379,10 @@ void moveProjectile()
 {
     if(buttonPressed==0)
     {
-        startX[9]=trans[9][0]=-314+15*cos(D2R(60));
-        startY[9]=trans[9][1]=-180+15*sin(D2R(60));
+        startX[9]=trans[9][0]=-314+speed*cos(D2R(rotateBarrel));
+        startY[9]=trans[9][1]=-180+speed*sin(D2R(rotateBarrel));
     }
-    for(int i=1;i<10;i++)
+    for(int i=1;i<14;i++)
     {
         if(i==9 && buttonPressed==0)
         {
@@ -387,7 +393,10 @@ void moveProjectile()
         if(velx[i]!=0.0f || vely[i]!=0.0f)
         {
             trans[i][0]=startX[i]+xdis(velx[i],0.3f,Mass[i],Timer[i]);
-            trans[i][1]=startY[i]+ydis(vely[i],0.3f,Mass[i],Timer[i],ADG);
+            if(i!=13)
+            {
+                trans[i][1]=startY[i]+ydis(vely[i],0.3f,Mass[i],Timer[i],ADG);
+            }
             Timer[i]+=tick;
         }
     }
@@ -400,7 +409,6 @@ void draw ()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram (programID);
     //Drawing objects
-
     moveProjectile();
     //Topple projectile
     if(checkCollision(9,10) && temp==false)
@@ -417,38 +425,16 @@ void draw ()
     {
         velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        if((vely[9]<1.0f) && checkCollision(9,0))
+        if((vely[9]<2.0f) && checkCollision(9,0))
         {
             trans[9][1]=-270.0f;
             velx[9]=0.0f;
             vely[9]=0.0f;
             Timer[9]=0.0f;
-            visible=false;
         }
         else
         {
             trans[9][1]=-270.0f;
-            startX[9]=trans[9][0];
-            startY[9]=trans[9][1];
-            Timer[9]=tick;
-        }
-    }
-    //Reflect from upper block
-    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,13))
-    {
-        velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
-        vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        if((vely[9]<1.0f) && checkCollision(9,0))
-        {
-            trans[9][1]=-230.0f;
-            velx[9]=0.0f;
-            vely[9]=0.0f;
-            Timer[9]=0.0f;
-            visible=false;
-        }
-        else
-        {
-            trans[9][1]=-218.0f;
             startX[9]=trans[9][0];
             startY[9]=trans[9][1];
             Timer[9]=tick;
@@ -459,11 +445,98 @@ void draw ()
     {
         velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        trans[9][0]=375.0f;
+        trans[9][0]=360.0f;
         startX[9]=trans[9][0];
         startY[9]=trans[9][1];
         Timer[9]=tick;
     }
+    //Reflect upper block
+    if(velx[9]!=0.0f && checkCollision(9,13))
+    {
+        float prev=xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        if(prev>0.0f)
+        {
+            startX[9]=trans[13][0]-30.0f;
+        }
+        else
+        {
+            startX[9]=trans[13][0]+30.0f;
+        }
+        startY[9]=trans[9][1];
+        startX[13]=trans[13][0];
+        velx[9]=((Mass[9]-COR*Mass[13])/(Mass[9]+Mass[13]))*prev;
+        velx[13]=velx[9]+prev*COR;
+        Timer[9]=tick;
+        Timer[13]=tick;
+    }
+    //Push upper block
+    if((velx[13]!=0.0f || vely[13]!=0.0f) && checkCollision(13,1))
+    {
+        velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
+        vely[13]=yvel(vely[9],0.3f,Mass[13],Timer[13],ADG);
+        trans[13][0]=360.0f;
+        startX[13]=trans[13][0];
+        startY[13]=trans[13][1];
+        if(!checkCollision(13,12) && !checkCollision(13,0))
+        {
+            if(trans[13][1]>=-270)
+            {
+                trans[13][1]-=10.0f;
+            }
+        }
+        Timer[13]=tick;
+    }
+    //Lower block fixed
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,12))
+    {
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if(trans[9][0]<120)
+        {
+            trans[9][0]=50.0f;
+        }
+        else if(trans[9][0]==120.0f)
+        {
+            trans[9][0]=120.0f;
+        }
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
+    //Pillar 2 fixed
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,11))
+    {
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if(trans[9][0]<280)
+        {
+            trans[9][0]=280.0f;
+        }
+        if(trans[9][0]==280)
+        {
+            trans[9][0]=280.0f;
+        }
+        if(trans[9][0]>280)
+        {
+            trans[9][0]=300.0f;
+        }
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
+    //Power
+    int num=xmousepos/10,prevnum=0;
+    int k=1;
+    for(int j=0;j<num;j++)
+    {
+        drawobject(objects[14],trans[14],rotat[14],glm::vec3(0,0,1));
+        if(num>prevnum)
+            k=1;
+        else if(num<prevnum)
+            k=-1;
+        trans[14][0]+=10*k;
+    }
+    prevnum=num;
     //Walls
     //Floor
     drawobject(objects[0],trans[0],rotat[0],glm::vec3(0,0,1));   
@@ -498,7 +571,7 @@ void draw ()
     trans[8][1]=trans[7][1]+50*sin(rotateBarrel*(M_PI/180));
     drawobject(objects[8],trans[8],rotateBarrel,glm::vec3(0,0,1));
     //Projectile
-    for(int i=1;i<360 && visible;i++)
+    for(int i=1;i<360;i++)
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
     }
@@ -511,7 +584,7 @@ void draw ()
     //drawobject(objects[12],trans[12],0,glm::vec3(0,0,1));
     //Upper block
     //drawobject(objects[13],trans[13],0,glm::vec3(0,0,1));
-    for(int i=10;i<14;i++)
+    for(int i=10;i<15;i++)
     {
         if(i==10 && temp)
         {
@@ -675,28 +748,38 @@ void initGL(int width, int height)
     movable[10]=true;
 
     //Pillar 2
-    objects[11]=createRectangle(10,50);
-    divideRect(3,10.0f,50.0f);
+    objects[11]=createRectangle(50,10);
+    divideRect(11,50.0f,10.0f);
     Mass[11]=250.0f;
     velx[11]=vely[11]=0.0f;
     trans[11]=glm::vec3(280.0f,-230.0f,0.0f);
-    rotat[11]=0.0f;
+    rotat[11]=90.0f;
     movable[11]=false;
 
     //Lower block
-    objects[12]=createRectangle(40,30);
-    divideRect(3,40.0f,30.0f);
+    objects[12]=createRectangle(60,30);
+    divideRect(12,60.0f,30.0f);
+    Mass[12]=450.0f;
     trans[12]=glm::vec3(120.0f,-250.0f,0.0f);
+    velx[12]=vely[12]=0.0f;
     rotat[12]=0.0f;
     movable[12]=false;
 
     //Upper block
-    objects[13]=createRectangle(20,20);
-    divideRect(3,20.0f,20.0f);
+    objects[13]=createRectangle(30,20);
+    divideRect(13,40.0f,20.0f);
+    Mass[13]=450.0f;
+    velx[13]=vely[13]=0.0f;
     trans[13]=glm::vec3(120.0f,-200.0f,0.0f);
     rotat[13]=0.0f;
     movable[13]=true;
-
+    
+    //Health Bar
+    objects[14]=createRectangle(10,20);
+    trans[14]=glm::vec3(-350.0f,240.0f,0.0f);
+    rotat[14]=0.0f;
+    movable[14]=false;
+    
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
