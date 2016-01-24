@@ -742,21 +742,25 @@ void draw()
 
     //Cannon
     //Circle
-    for(int i=1;i<360;i++)
+    for(int i=1;i<20;i++)
     {
-        drawobject(objects[4],trans[4],i,glm::vec3(0,0,1));   
+        drawobject(objects[4],trans[4],i*20,glm::vec3(0,0,1));   
     }
     //Rectangle
     drawobject(objects[5],trans[5],rotat[5],glm::vec3(0,0,1));   
     //Circle
-    for(int i=1;i<360;i++)
+    for(int i=1;i<20;i++)
     {
-        drawobject(objects[6],trans[6],i,glm::vec3(0,0,1));   
+        drawobject(objects[6],trans[6],i*20,glm::vec3(0,0,1));   
     }
     //Tank Head
-    for(int i=1;i<360;i++)
+    for(int i=1;i<20;i++)
     {
-        drawobject(objects[7],trans[7],i,glm::vec3(0,0,1));   
+        drawobject(objects[7],trans[7],i*20,glm::vec3(0,0,1));   
+    }
+    for(int i=1;i<18;i++)
+    {
+        drawobject(objects[26],trans[26],i*10,glm::vec3(0,0,1));   
     }
     //Barrel
     rotateBarrel=atan2((-ymousepos+300-trans[7][1]),(xmousepos-400-trans[7][0]))*(180/M_PI);
@@ -1108,10 +1112,18 @@ void initGL(int width, int height)
     objects[25]=createSector(70.0f,18,lightyellow);
     centre[25].pb(mp(mp(0.0f,0.0f),50.0f));
     Mass[25]=250.0f;
-    velx[25]=vely[24]=0.0f;
+    velx[25]=vely[25]=0.0f;
     trans[25]=glm::vec3(-250.0f,100.0f,0.0f);
     rotat[25]=0.0f;
     movable[25]=false;
+    //Inner tank head
+    objects[26]=createSector(30.0f,18,lightblue);
+    centre[26].pb(mp(mp(0.0f,0.0f),35.0f));
+    Mass[26]=250.0f;
+    velx[26]=vely[26]=0.0f;
+    trans[26]=glm::vec3(-317.0f,-190.0f,0.0f);
+    rotat[26]=0.0f;
+    movable[26]=false;
     
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
