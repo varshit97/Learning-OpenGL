@@ -132,6 +132,7 @@ float startX[MAX];
 float startY[MAX];
 bool movable[MAX];
 int count[MAX]={0};
+int score=0;
 float COR=0.6f;
 float ADG=1.0f;
 float tick=0.6f;
@@ -403,7 +404,7 @@ void moveProjectile()
     }
 }
 
-bool temp=false;
+bool temp=false,piggy=true;
 int xpos=-320,max1=-10000;
 
 void draw ()
@@ -458,6 +459,7 @@ void draw ()
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,13))
     {
         count[13]+=1;
+        score+=20;
         float prev=xvel(velx[9],0.3f,Mass[9],Timer[9]);
         if(prev>0.0f)
         {
@@ -520,8 +522,8 @@ void draw ()
     {
         if(trans[9][0]<120 && checkCollision(9,12))
         {
-            vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
             velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         }
         else if(trans[9][0]==120.0f)
         {
@@ -612,32 +614,8 @@ void draw ()
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
     }
-    
+
     //Pigs
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[15],trans[15],i,glm::vec3(0,0,1));   
-    }
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[16],trans[16],i,glm::vec3(0,0,1));   
-    }
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[17],trans[17],i,glm::vec3(0,0,1));   
-    }
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[18],trans[18],i,glm::vec3(0,0,1));   
-    }
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[19],trans[19],i,glm::vec3(0,0,1));   
-    }
-    for(int i=1;i<360;i++)
-    {
-        drawobject(objects[20],trans[20],i,glm::vec3(0,0,1));   
-    }
     //Pillar 1
     //drawobject(objects[10],trans[10],0,glm::vec3(0,0,1));
     //Pillar 2
@@ -646,7 +624,12 @@ void draw ()
     //drawobject(objects[12],trans[12],0,glm::vec3(0,0,1));
     //Upper block
     //drawobject(objects[13],trans[13],0,glm::vec3(0,0,1));
-    for(int i=10;i<15;i++)
+    if(checkCollision(20,10))
+    {
+        piggy=false;
+        score+=40;
+    }
+    for(int i=10;i<21;i++)
     {
         if(i==10 && temp)
         {
@@ -664,9 +647,41 @@ void draw ()
         }
         else
         {
-            if(count[i]<3)
+            if(count[i]<3 && i<15)
             {
                 drawobject(objects[i],trans[i],rotat[i],glm::vec3(0,0,1));
+            }
+            if(count[i]>=3)
+            {
+                
+            }
+            //Pigs
+            if(piggy)
+            {
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[15],trans[15],i*20,glm::vec3(0,0,1));   
+                }
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[16],trans[16],i*20,glm::vec3(0,0,1));   
+                }
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[17],trans[17],i*20,glm::vec3(0,0,1));   
+                }
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[18],trans[18],i*20,glm::vec3(0,0,1));   
+                }
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[19],trans[19],i*20,glm::vec3(0,0,1));   
+                }
+                for(int i=1;i<20;i++)
+                {
+                    drawobject(objects[20],trans[20],i*20,glm::vec3(0,0,1));   
+                }
             }
         }
     }
@@ -843,19 +858,19 @@ void initGL(int width, int height)
     trans[13]=glm::vec3(120.0f,-190.0f,0.0f);
     rotat[13]=90.0f;
     movable[13]=true;
-    
+
     //Health Bar
     objects[14]=createRectangle(10,20,green);
     trans[14]=glm::vec3(-320.0f,240.0f,0.0f);
     rotat[14]=0.0f;
     movable[14]=false;
-    
+
     //Pigs
     objects[15]=createSector(25.0f,18,green);
     centre[15].pb(mp(mp(0.0f,0.0f),25.0f));
     Mass[15]=250.0f;
     velx[15]=vely[15]=0.0f;
-    trans[15]=glm::vec3(0.0f,0.0f,0.0f);
+    trans[15]=glm::vec3(0.0f,-260.0f,0.0f);
     rotat[15]=0.0f;
     movable[15]=false;
     //Pig Eye1
@@ -863,7 +878,7 @@ void initGL(int width, int height)
     centre[16].pb(mp(mp(0.0f,0.0f),4.0f));
     Mass[16]=250.0f;
     velx[16]=vely[16]=0.0f;
-    trans[16]=glm::vec3(-10.0f,8.0f,0.0f);
+    trans[16]=glm::vec3(-10.0f,-252.0f,0.0f);
     rotat[16]=0.0f;
     movable[16]=false;
     //Pig Eye2
@@ -871,7 +886,7 @@ void initGL(int width, int height)
     centre[17].pb(mp(mp(0.0f,0.0f),4.0f));
     Mass[17]=250.0f;
     velx[17]=vely[17]=0.0f;
-    trans[17]=glm::vec3(10.0f,8.0f,0.0f);
+    trans[17]=glm::vec3(10.0f,-252.0f,0.0f);
     rotat[17]=0.0f;
     movable[17]=false;
     //Pig nose
@@ -879,7 +894,7 @@ void initGL(int width, int height)
     centre[18].pb(mp(mp(0.0f,0.0f),8.0f));
     Mass[18]=250.0f;
     velx[18]=vely[18]=0.0f;
-    trans[18]=glm::vec3(0.0f,-10.0f,0.0f);
+    trans[18]=glm::vec3(0.0f,-270.0f,0.0f);
     rotat[18]=0.0f;
     movable[18]=false;
     //Pig ear 1
@@ -887,18 +902,18 @@ void initGL(int width, int height)
     centre[19].pb(mp(mp(0.0f,0.0f),12.0f));
     Mass[19]=250.0f;
     velx[19]=vely[19]=0.0f;
-    trans[19]=glm::vec3(24.0f,18.0f,0.0f);
+    trans[19]=glm::vec3(24.0f,-242.0f,0.0f);
     rotat[19]=0.0f;
-    movable[19]=false;
+    movable[19]=true;
     //Pig ear 2
     objects[20]=createSector(12.0f,18,green);
     centre[20].pb(mp(mp(0.0f,0.0f),12.0f));
     Mass[20]=250.0f;
     velx[20]=vely[20]=0.0f;
-    trans[20]=glm::vec3(-24.0f,18.0f,0.0f);
+    trans[20]=glm::vec3(-24.0f,-242.0f,0.0f);
     rotat[20]=0.0f;
     movable[20]=false;
-    
+
 
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
