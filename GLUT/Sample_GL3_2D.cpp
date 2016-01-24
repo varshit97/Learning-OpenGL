@@ -332,16 +332,16 @@ void keyboardSpecialDown(int key, int x, int y)
     switch(key)
     {
         case 100:
-            panX-=3.0f;
-            break;
-        case 102:
             panX+=3.0f;
             break;
+        case 102:
+            panX-=3.0f;
+            break;
         case 101:
-            panY+=3.0f;
+            panY-=3.0f;
             break;
         case 103:
-            panY-=3.0f;
+            panY+=3.0f;
             break;
     }
 }
@@ -500,7 +500,7 @@ void moveProjectile()
 bool temp=false,piggy=true;
 int xpos=-320;
 
-void draw ()
+void draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram (programID);
@@ -618,7 +618,7 @@ void draw ()
     //Lower block fixed
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,12))
     {
-        if(trans[9][0]<120 && checkCollision(9,12))
+        if(trans[9][0]<120.0f && checkCollision(9,12))
         {
             velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
             vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
@@ -730,6 +730,15 @@ void draw ()
     drawobject(objects[2],trans[2],rotat[2],glm::vec3(0,0,1));   
     //Left Wall
     drawobject(objects[3],trans[3],rotat[3],glm::vec3(0,0,1));   
+    //Sun
+    for(int i=0;i<20;i+=2)
+    {
+        drawobject(objects[25],trans[25],i*20,glm::vec3(0,0,1));   
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[24],trans[24],i*20,glm::vec3(0,0,1));   
+    }
 
     //Cannon
     //Circle
@@ -905,7 +914,9 @@ void initGL(int width, int height)
     GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
     GLfloat blue[]={0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0};
     GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
-
+    GLfloat yellow[]={1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0};
+    GLfloat lightyellow[]={1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0};
+    GLfloat lightblue[]={0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0};
     //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
@@ -1084,7 +1095,24 @@ void initGL(int width, int height)
     trans[20]=glm::vec3(-24.0f,-242.0f,0.0f);
     rotat[20]=0.0f;
     movable[20]=false;
-
+   
+    //Sun
+    objects[24]=createSector(50.0f,18,yellow);
+    centre[24].pb(mp(mp(0.0f,0.0f),50.0f));
+    Mass[24]=250.0f;
+    velx[24]=vely[24]=0.0f;
+    trans[24]=glm::vec3(-250.0f,100.0f,0.0f);
+    rotat[24]=0.0f;
+    movable[24]=false;
+    //Sun shade
+    objects[25]=createSector(70.0f,18,lightyellow);
+    centre[25].pb(mp(mp(0.0f,0.0f),50.0f));
+    Mass[25]=250.0f;
+    velx[25]=vely[24]=0.0f;
+    trans[25]=glm::vec3(-250.0f,100.0f,0.0f);
+    rotat[25]=0.0f;
+    movable[25]=false;
+    
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
