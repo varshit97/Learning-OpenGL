@@ -309,6 +309,7 @@ void keyboardDown(unsigned char key, int x, int y)
             exit (0);
             break;
         default:
+            cout << "lolly" << endl;
             break;
     }
 }
@@ -323,8 +324,25 @@ void keyboardUp(unsigned char key, int x, int y)
     }
 }
 
+float panX=0,panY=0;
+
 void keyboardSpecialDown(int key, int x, int y)
 {
+    switch(key)
+    {
+        case 100:
+            panX-=3.0f;
+            break;
+        case 102:
+            panX+=3.0f;
+            break;
+        case 101:
+            panY+=3.0f;
+            break;
+        case 103:
+            panY-=3.0f;
+            break;
+    }
 }
 void keyboardSpecialUp(int key, int x, int y)
 {
@@ -486,7 +504,7 @@ void draw ()
     glUseProgram (programID);
     char str[10]="Varshit";
     output(0, 0, str);
-    Matrices.projection=glm::ortho(-zoomX/2.0f,zoomX/2.0f,-zoomY/2.0f,zoomY/2.0f,0.1f, 500.0f);
+    Matrices.projection=glm::ortho(-(zoomX/2.0f)+panX,(zoomX/2.0f)+panX,-(zoomY/2.0f)+panY,(zoomY/2.0f)+panY,0.1f, 500.0f);
     //output(100, 100, message);
     //output(50, 145, "(positioned in pixels with upper-left origin)");
     //Drawing objects
@@ -608,18 +626,17 @@ void draw ()
             trans[9][0]=120.0f;
             trans[9][1]=-220.0f;
         }
-        else if(trans[9][0]>=180.0f && checkCollision(9,12))
+        else if(trans[9][0]>=160.0f && checkCollision(9,12))
         {
-            cout << "In else" << endl;
-            //velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
-            velx[9]=-3.0f;
+            velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            //velx[9]=-5.0f;
             vely[9]=10.0f;
             trans[9][0]=190.0f;
         }
         while(trans[9][1]>=-250.0f && checkCollision(9,12))
         {
             //velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
-            velx[9]=-3.0f;
+            velx[9]=3.0f;
             vely[9]=10.0f;
             trans[9][1]=-210.0f;
         }
