@@ -459,11 +459,11 @@ void draw ()
         float prev=xvel(velx[9],0.3f,Mass[9],Timer[9]);
         if(prev>0.0f)
         {
-            startX[9]=trans[13][0]-30.0f;
+            startX[9]=trans[13][0]-40.0f;
         }
         else
         {
-            startX[9]=trans[13][0]+30.0f;
+            startX[9]=trans[13][0]+40.0f;
         }
         startY[9]=trans[9][1];
         startX[13]=trans[13][0];
@@ -500,22 +500,23 @@ void draw ()
     }
     if((velx[13]!=0.0f || vely[13]!=0.0f) && checkCollision(13,1))
     {
-        while(!checkCollision(13,12) && !checkCollision(13,0))
+        if(!checkCollision(13,12) && !checkCollision(13,0))
         {
             trans[13][1]-=1.0f;
+            trans[13][0]-=1.0f;
         }
-        velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
-        vely[13]=yvel(vely[13],0.3f,Mass[13],Timer[13],ADG);
-        trans[13][0]=360.0f;
-        startX[13]=trans[13][0];
-        startY[13]=trans[13][1];
+        //velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
+        //vely[13]=yvel(vely[13],0.3f,Mass[13],Timer[13],ADG);
+        //trans[13][0]=360.0f;
+        //startX[13]=trans[13][0];
+        //startY[13]=trans[13][1];
         Timer[13]=tick;
     }
 
     //Lower block fixed
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,12))
     {
-        if(trans[9][0]<120)
+        if(trans[9][0]<120 && checkCollision(9,12))
         {
             vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
             velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
@@ -528,11 +529,13 @@ void draw ()
         else if(trans[9][0]>=180.0f && checkCollision(9,12))
         {
             velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            trans[9][0]=190.0f;
         }
         while(trans[9][1]>=-250.0f && checkCollision(9,12))
         {
-            velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9])+10;
-            vely[9]=10.0f;
+            velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            //velx[9]=-5.0f;
+            //vely[9]=10.0f;
             trans[9][1]=-210.0f;
         }
         startX[9]=trans[9][0];
