@@ -453,7 +453,7 @@ void draw ()
         Timer[9]=tick;
     }
 
-    //Reflect upper block
+    //Move upper block
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,13))
     {
         float prev=xvel(velx[9],0.3f,Mass[9],Timer[9]);
@@ -467,51 +467,71 @@ void draw ()
         }
         startY[9]=trans[9][1];
         startX[13]=trans[13][0];
-        velx[9]=((Mass[9]-COR*Mass[13])/(Mass[9]+Mass[13]))*prev;
-        velx[13]=velx[9]+prev*COR;
+        //velx[13]=velx[9]+prev*COR;
+        if(checkCollision(9,13))
+        {
+            velx[9]=((Mass[9]-COR*Mass[13])/(Mass[9]+Mass[13]))*prev;
+            velx[13]=COR*prev+velx[9];  
+        }
         Timer[9]=tick;
         Timer[13]=tick;
     }
-
-    //Push upper block
-    /*if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(13,9))
+    if((velx[13]!=0.0f || vely[13]!=0.0f) && checkCollision(13,12))
     {
-        velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
-        vely[13]=yvel(vely[9],0.3f,Mass[13],Timer[13],ADG);
-        //trans[13][0]=350.0f;
+        if(trans[13][0]<120 && checkCollision(13,12))
+        {
+            velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
+        }
+        while(trans[13][0]<120 && !checkCollision(13,12))
+        {
+            trans[13][1]-=0.1f;;
+        }
+        if(trans[13][0]>=120.0f && checkCollision(13,12))
+        {
+            velx[13]=COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
+        }
+        while(trans[13][0]>=120.0f && !checkCollision(13,12))
+        {
+            trans[13][1]-=1.0f;
+        }
         startX[13]=trans[13][0];
         startY[13]=trans[13][1];
-        if(!checkCollision(13,12) && !checkCollision(13,0))
-        {
-            if(trans[13][1]>=-270)
-            {
-                trans[13][1]-=20.0f;
-            }
-        }
         Timer[13]=tick;
-    }*/
+    }
+    if((velx[13]!=0.0f || vely[13]!=0.0f) && checkCollision(13,1))
+    {
+        while(!checkCollision(13,12) && !checkCollision(13,0))
+        {
+            trans[13][1]-=1.0f;
+        }
+        velx[13]=-COR*xvel(velx[13],0.3f,Mass[13],Timer[13]);
+        vely[13]=yvel(vely[13],0.3f,Mass[13],Timer[13],ADG);
+        trans[13][0]=360.0f;
+        startX[13]=trans[13][0];
+        startY[13]=trans[13][1];
+        Timer[13]=tick;
+    }
 
     //Lower block fixed
     if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,12))
     {
-        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
-        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         if(trans[9][0]<120)
         {
-            vely[9]=10.0f;
-            trans[9][0]=50.0f;
+            vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+            velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
         }
         else if(trans[9][0]==120.0f)
         {
             trans[9][0]=120.0f;
+            trans[9][1]=-220.0f;
         }
         else if(trans[9][0]>=180.0f && checkCollision(9,12))
         {
-            trans[9][0]=190.0f;
+            velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
         }
         while(trans[9][1]>=-250.0f && checkCollision(9,12))
         {
-            velx[9]=-5.0f;
+            velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9])+10;
             vely[9]=10.0f;
             trans[9][1]=-210.0f;
         }
@@ -684,10 +704,12 @@ void divideRect(int i,float width,float height)
 
 void initGL(int width, int height)
 {
-    //Floor
+    //Colours
     GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
     GLfloat blue[]={0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0};
     GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
+
+    //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
     trans[0]=glm::vec3(0.0f,-290.0f,0.0f);
@@ -767,7 +789,7 @@ void initGL(int width, int height)
     divideRect(11,50.0f,10.0f);
     Mass[11]=250.0f;
     velx[11]=vely[11]=0.0f;
-    trans[11]=glm::vec3(280.0f,-230.0f,0.0f);
+    trans[11]=glm::vec3(280.0f,230.0f,0.0f);
     rotat[11]=90.0f;
     movable[11]=false;
 
@@ -781,12 +803,12 @@ void initGL(int width, int height)
     movable[12]=false;
 
     //Upper block
-    objects[13]=createRectangle(30,20,green);
+    objects[13]=createRectangle(40,20,green);
     divideRect(13,40.0f,20.0f);
     Mass[13]=450.0f;
     velx[13]=vely[13]=0.0f;
-    trans[13]=glm::vec3(120.0f,-200.0f,0.0f);
-    rotat[13]=0.0f;
+    trans[13]=glm::vec3(120.0f,-190.0f,0.0f);
+    rotat[13]=90.0f;
     movable[13]=true;
     
     //Health Bar
