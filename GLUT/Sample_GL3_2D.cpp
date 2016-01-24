@@ -313,6 +313,7 @@ void keyboardDown(unsigned char key, int x, int y)
             break;
     }
 }
+
 void keyboardUp(unsigned char key, int x, int y)
 {
     switch(key)
@@ -344,6 +345,7 @@ void keyboardSpecialDown(int key, int x, int y)
             break;
     }
 }
+
 void keyboardSpecialUp(int key, int x, int y)
 {
 }
@@ -672,22 +674,44 @@ void draw ()
     {
         velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        if(trans[9][0]<200)
+        if(trans[9][0]<150)
         {
-            trans[9][0]=180.0f;
+            trans[9][0]=130.0f;
         }
-        if(trans[9][0]==200)
+        if(trans[9][0]==150)
         {
-            trans[9][0]=200.0f;
+            trans[9][0]=150.0f;
         }
-        if(trans[9][0]>200)
+        if(trans[9][0]>150)
         {
-            trans[9][0]=220.0f;
+            trans[9][0]=170.0f;
         }
         startX[9]=trans[9][0];
         startY[9]=trans[9][1];
         Timer[9]=tick;
     }
+
+    //Pillar 4 fixed
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,22))
+    {
+        velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if((vely[9]<2.0f) && checkCollision(9,22))
+        {
+            trans[9][1]=20.0f;
+            velx[9]=0.0f;
+            vely[9]=0.0f;
+            Timer[9]=0.0f;
+        }
+        else
+        {
+            trans[9][1]=20.0f;
+            startX[9]=trans[9][0];
+            startY[9]=trans[9][1];
+            Timer[9]=tick;
+        }
+    }
+
     //Power
     int num=((int)xmousepos%800)/2;
     for(int j=0;j<num;j++)
@@ -735,6 +759,8 @@ void draw ()
     }
     //Pillar 3
     drawobject(objects[21],trans[21],rotat[21],glm::vec3(0,0,1));
+    //Pillar 4
+    drawobject(objects[22],trans[22],rotat[22],glm::vec3(0,0,1));
 
     //Pigs
     //Pillar 1
@@ -967,9 +993,18 @@ void initGL(int width, int height)
     divideRect(21,50.0f,10.0f);
     Mass[21]=250.0f;
     velx[21]=vely[21]=0.0f;
-    trans[21]=glm::vec3(200.0f,100.0f,0.0f);
+    trans[21]=glm::vec3(150.0f,40.0f,0.0f);
     rotat[21]=90.0f;
     movable[21]=false;
+    
+    //Pillar 4
+    objects[22]=createRectangle(70,10,green);
+    divideRect(22,70.0f,10.0f);
+    Mass[22]=250.0f;
+    velx[22]=vely[22]=0.0f;
+    trans[22]=glm::vec3(220.0f,0.0f,0.0f);
+    rotat[22]=0.0f;
+    movable[22]=false;
 
     //Lower block
     objects[12]=createRectangle(60,30,green);
