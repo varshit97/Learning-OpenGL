@@ -1,6 +1,7 @@
 /****************************************************** DO NOT CHANGE THIS SECTION OF CODE **************************************************/
 #include <iostream>
 #include <cmath>
+#include<cstring>
 #include <fstream>
 #include <vector>
 #include <GL/glew.h>
@@ -162,6 +163,50 @@ float dis(dub p,dub q)
     return sqr(p.F-q.F)+sqr(p.S-q.S);
 }
 
+void *font = GLUT_BITMAP_TIMES_ROMAN_24;
+void *fonts[] =
+{
+    GLUT_BITMAP_9_BY_15,
+    GLUT_BITMAP_TIMES_ROMAN_10,
+    GLUT_BITMAP_TIMES_ROMAN_24
+};
+char defaultMessage[] = "GLUT means OpenGL.";
+char *message = defaultMessage;
+
+void selectFont(int newfont)
+{
+    font = fonts[newfont];
+    glutPostRedisplay();
+}
+
+void selectColor(int color)
+{
+    switch (color) {
+        case 1:
+            glColor3f(1.0, 0.0, 0.0);
+            break;
+        case 2:
+            glColor3f(1.0, 0.0, 0.0);
+            break;
+        case 3:
+            glColor3f(1.0, 0.0, 0.0);
+            break;
+    }
+    glutPostRedisplay();
+}
+
+void output(int x, int y, char str[])
+{
+    int len, i;
+    glRasterPos2f(x, y);
+    len = (int) strlen(str);
+    for (i = 0; i < len; i++) 
+    {
+        glutBitmapCharacter(font, str[i]);
+    }
+}
+
+
 /********************************************************** AIR FRICTION ********************************************************************/
 
 float EKMT(float K,float M,float T)
@@ -228,16 +273,41 @@ bool checkCollision(int i,int j)
     return false;
 }
 
-/***************************************************** KEYBOARD AND MOUSE FUNCTIONS  ********************************************************/
+/***************************************************** KEYBOARD AND MOUSE FUNCTIONS  *******************************************************/
+
+float rotateBarrel;
+float speed=0;
+float xmousepos,ymousepos;
+float zoomX=800,zoomY=600;
+int buttonPressed=0;
+bool visible=true;
 
 void keyboardDown(unsigned char key, int x, int y)
 {
     switch(key)
     {
         case 'Q':
+            exit(0);
+            break;
+        case 'f':
+            speed+=0.1;
+            break;
+        case 's':
+            speed-=0.1;
+            break;
+        case ' ':
+            speed=30*(xmousepos/400);
+            buttonPressed=1;
+            velx[9]=speed*(cos(rotateBarrel*(M_PI/180)));
+            vely[9]=speed*(sin(rotateBarrel*(M_PI/180)));
+            Timer[9]=0.0f;
+            break;
         case 'q':
+            exit(0);
+            break;
         case 27: //ESC
             exit (0);
+            break;
         default:
             break;
     }
@@ -253,19 +323,12 @@ void keyboardUp(unsigned char key, int x, int y)
     }
 }
 
-int buttonPressed=0;
-bool visible=true;
-
 void keyboardSpecialDown(int key, int x, int y)
 {
 }
 void keyboardSpecialUp(int key, int x, int y)
 {
 }
-
-float rotateBarrel;
-float speed;
-float xmousepos,ymousepos;
 
 void mouseClick(int button, int state, int x, int y)
 {
@@ -284,6 +347,16 @@ void mouseClick(int button, int state, int x, int y)
         velx[9]=32.0f;
         vely[9]=0.0f;
         Timer[9]=0.0f;
+    }
+    if(button==4)
+    {
+        zoomX+=5.0f;
+        zoomY+=5.0f;
+    }
+    else if(button==3)
+    {
+        zoomX-=5.0f;
+        zoomY-=5.0f;
     }
     cerr << x << y << "\n";
 }
@@ -304,7 +377,7 @@ void reshapeWindow(int width, int height)
 {
     GLfloat fov=90.0f;
     glViewport(0, 0, (GLsizei) width, (GLsizei) height);
-    Matrices.projection=glm::ortho(-width/2.0f,width/2.0f,-height/2.0f,height/2.0f,0.1f, 500.0f);
+    Matrices.projection=glm::ortho(-zoomX/2.0f,zoomX/2.0f,-zoomY/2.0f,zoomY/2.0f,0.1f, 500.0f);
 }
 
 VAO* createRectangle(float x,float y, GLfloat colours[])
@@ -405,12 +478,17 @@ void moveProjectile()
 }
 
 bool temp=false,piggy=true;
-int xpos=-320,max1=-10000;
+int xpos=-320;
 
 void draw ()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram (programID);
+    char str[10]="Varshit";
+    output(0, 0, str);
+    Matrices.projection=glm::ortho(-zoomX/2.0f,zoomX/2.0f,-zoomY/2.0f,zoomY/2.0f,0.1f, 500.0f);
+    //output(100, 100, message);
+    //output(50, 145, "(positioned in pixels with upper-left origin)");
     //Drawing objects
     moveProjectile();
     //Topple projectile
@@ -532,14 +610,17 @@ void draw ()
         }
         else if(trans[9][0]>=180.0f && checkCollision(9,12))
         {
-            velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            cout << "In else" << endl;
+            //velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            velx[9]=-3.0f;
+            vely[9]=10.0f;
             trans[9][0]=190.0f;
         }
         while(trans[9][1]>=-250.0f && checkCollision(9,12))
         {
-            velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
-            //velx[9]=-5.0f;
-            //vely[9]=10.0f;
+            //velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            velx[9]=-3.0f;
+            vely[9]=10.0f;
             trans[9][1]=-210.0f;
         }
         startX[9]=trans[9][0];
@@ -569,8 +650,29 @@ void draw ()
         Timer[9]=tick;
     }
 
+    //Pillar 3 fixed
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,21))
+    {
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        if(trans[9][0]<200)
+        {
+            trans[9][0]=180.0f;
+        }
+        if(trans[9][0]==200)
+        {
+            trans[9][0]=200.0f;
+        }
+        if(trans[9][0]>200)
+        {
+            trans[9][0]=220.0f;
+        }
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
     //Power
-    int num=((int)xmousepos%800)/4;
+    int num=((int)xmousepos%800)/2;
     for(int j=0;j<num;j++)
     {
         drawobject(objects[14],glm::vec3(xpos+j,trans[14][1],0),rotat[14],glm::vec3(0,0,1));
@@ -614,6 +716,8 @@ void draw ()
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
     }
+    //Pillar 3
+    drawobject(objects[21],trans[21],rotat[21],glm::vec3(0,0,1));
 
     //Pigs
     //Pillar 1
@@ -653,7 +757,7 @@ void draw ()
             }
             if(count[i]>=3)
             {
-                
+
             }
             //Pigs
             if(piggy)
@@ -837,9 +941,18 @@ void initGL(int width, int height)
     divideRect(11,50.0f,10.0f);
     Mass[11]=250.0f;
     velx[11]=vely[11]=0.0f;
-    trans[11]=glm::vec3(280.0f,230.0f,0.0f);
+    trans[11]=glm::vec3(280.0f,40.0f,0.0f);
     rotat[11]=90.0f;
     movable[11]=false;
+    
+    //Pillar 3
+    objects[21]=createRectangle(50,10,green);
+    divideRect(21,50.0f,10.0f);
+    Mass[21]=250.0f;
+    velx[21]=vely[21]=0.0f;
+    trans[21]=glm::vec3(200.0f,100.0f,0.0f);
+    rotat[21]=90.0f;
+    movable[21]=false;
 
     //Lower block
     objects[12]=createRectangle(60,30,green);
@@ -914,7 +1027,6 @@ void initGL(int width, int height)
     rotat[20]=0.0f;
     movable[20]=false;
 
-
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
@@ -932,6 +1044,11 @@ int main (int argc, char** argv)
     height = 600;
     initGLUT (argc, argv, width, height);
     initGL(width, height);
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-mono")) {
+            font = GLUT_BITMAP_9_BY_15;
+        }
+    }
     glutMainLoop ();
     return 0;
 }
