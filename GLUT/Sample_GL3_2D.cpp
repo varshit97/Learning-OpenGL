@@ -475,7 +475,7 @@ void moveProjectile()
     if(buttonPressed==0)
     {
         startX[9]=trans[9][0]=-314+speed*cos(D2R(rotateBarrel));
-        startY[9]=trans[9][1]=-180+speed*sin(D2R(rotateBarrel));
+        startY[9]=trans[9][1]=-190+speed*sin(D2R(rotateBarrel));
     }
     for(int i=1;i<16;i++)
     {
@@ -711,12 +711,14 @@ void draw ()
             Timer[9]=tick;
         }
     }
+    //power background
+    drawobject(objects[23],trans[23],rotat[23],glm::vec3(0,0,1));   
 
     //Power
-    int num=((int)xmousepos%800)/2;
+    int num=((int)xmousepos%800)/30;
     for(int j=0;j<num;j++)
     {
-        drawobject(objects[14],glm::vec3(xpos+j,trans[14][1],0),rotat[14],glm::vec3(0,0,1));
+        drawobject(objects[14],glm::vec3(xpos+j*25,trans[14][1],0),rotat[14],glm::vec3(0,0,1));
     }
 
     //Walls
@@ -933,25 +935,25 @@ void initGL(int width, int height)
     //Cannon
     //Circle
     objects[4]=createSector(20,18,blueblack);
-    trans[4]=glm::vec3(-360.0f,-260.0f,0.0f);
+    trans[4]=glm::vec3(-340.0f,-260.0f,0.0f);
     rotat[4]=0.0f;
     movable[4]=false;
 
     //Rectangle
-    objects[5]=createRectangle(35,30,blueblack);
-    trans[5]=glm::vec3(-317.0f,-212.0f,0.0f);
+    objects[5]=createRectangle(35,35,blueblack);
+    trans[5]=glm::vec3(-317.0f,-230.0f,0.0f);
     rotat[5]=0.0f;
     movable[5]=false;
 
     //Circle
     objects[6]=createSector(20,18,blueblack);
-    trans[6]=glm::vec3(-273.0f,-260.0f,0.0f);
+    trans[6]=glm::vec3(-290.0f,-260.0f,0.0f);
     rotat[6]=0.0f;
     movable[6]=false;
 
     //Tank Head
-    objects[7]=createSector(20,18,blueblack);
-    trans[7]=glm::vec3(-314.0f,-180.0f,0.0f);
+    objects[7]=createSector(35,18,blueblack);
+    trans[7]=glm::vec3(-317.0f,-190.0f,0.0f);
     rotat[7]=0.0f;
     movable[7]=false;
 
@@ -1030,6 +1032,10 @@ void initGL(int width, int height)
     rotat[14]=0.0f;
     movable[14]=false;
 
+    objects[23]=createRectangle(350,30,blue);
+    trans[23]=glm::vec3(-10.0f,240.0f,0.0f);
+    rotat[23]=0.0f;
+    movable[32]=false;
     //Pigs
     objects[15]=createSector(25.0f,18,green);
     centre[15].pb(mp(mp(0.0f,0.0f),25.0f));
