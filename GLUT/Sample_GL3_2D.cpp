@@ -499,6 +499,7 @@ void moveProjectile()
 
 bool temp=false,piggy=true;
 int xpos=-320;
+GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
 
 void draw()
 {
@@ -637,8 +638,8 @@ void draw()
         }
         while(trans[9][1]>=-250.0f && checkCollision(9,12))
         {
-            //velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
-            velx[9]=3.0f;
+            velx[9]=COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+            //velx[9]=3.0f;
             vely[9]=10.0f;
             trans[9][1]=-210.0f;
         }
@@ -696,9 +697,10 @@ void draw()
     {
         velx[9]=xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
-        if((vely[9]<2.0f) && checkCollision(9,22))
+        if(trans[9][1]<trans[22][1] && checkCollision(9,22))
         {
-            trans[9][1]=20.0f;
+            cout << "bhajesh " << trans[9][1] << " " << trans[22][1] << endl;
+            trans[9][1]=-20.0f;
             velx[9]=0.0f;
             vely[9]=0.0f;
             Timer[9]=0.0f;
@@ -814,8 +816,8 @@ void draw()
                 drawobject(objects[i],trans[i],rotat[i],glm::vec3(0,0,1));
             }
             if(count[i]>=3)
-            {
-
+            {            
+                trans[i]=glm::vec3(-400.0f,-300.0f,0.0f);
             }
             //Pigs
             if(piggy)
@@ -915,7 +917,7 @@ void divideRect(int i,float width,float height)
 void initGL(int width, int height)
 {
     //Colours
-    GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
+
     GLfloat blue[]={0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0};
     GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
     GLfloat yellow[]={1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0};
