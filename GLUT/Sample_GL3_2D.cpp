@@ -436,6 +436,16 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     draw3DObject(obj);
 }
 
+VAO* createSector(float R,int parts,GLfloat colours[])
+{
+    float diff=360.0f/parts;
+    float A1=formatAngle(-diff/2);
+    float A2=formatAngle(diff/2);
+    GLfloat vertex_buffer_data[]={0.0f,0.0f,0.0f,R*cos(D2R(A1)),R*sin(D2R(A1)),0.0f,R*cos(D2R(A2)),R*sin(D2R(A2)),0.0f};
+    GLfloat color_buffer_data[]={1,0,0,1,0,0,1,0,0};
+    return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,colours,GL_FILL);
+}
+
 void trt(VAO* obj,double toX,double toY,double rot_angle,double width,double height)
 {
     Matrices.view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
@@ -497,9 +507,12 @@ void moveProjectile()
     }
 }
 
+bool vanish=false;
 bool temp=false,piggy=true;
 int xpos=-320;
+float radius=10.0f;
 GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
+GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
 
 void draw()
 {
@@ -549,6 +562,17 @@ void draw()
         velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
         vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         trans[9][0]=360.0f;
+        startX[9]=trans[9][0];
+        startY[9]=trans[9][1];
+        Timer[9]=tick;
+    }
+
+    //Reflect from left wall
+    if((velx[9]!=0.0f || vely[9]!=0.0f) && checkCollision(9,3))
+    {
+        velx[9]=-COR*xvel(velx[9],0.3f,Mass[9],Timer[9]);
+        vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
+        trans[9][0]=-370.0f;
         startX[9]=trans[9][0];
         startY[9]=trans[9][1];
         Timer[9]=tick;
@@ -699,7 +723,7 @@ void draw()
         vely[9]=-COR*yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         if(trans[9][1]<trans[22][1] && checkCollision(9,22))
         {
-            cout << "bhajesh " << trans[9][1] << " " << trans[22][1] << endl;
+            //cout << "bhajesh " << trans[9][1] << " " << trans[22][1] << endl;
             trans[9][1]=-20.0f;
             velx[9]=0.0f;
             vely[9]=0.0f;
@@ -713,11 +737,12 @@ void draw()
             Timer[9]=tick;
         }
     }
+
     //power background
     drawobject(objects[23],trans[23],rotat[23],glm::vec3(0,0,1));   
 
     //Power
-    int num=((int)xmousepos%800)/30;
+    int num=((int)xmousepos%800)/50;
     for(int j=0;j<num;j++)
     {
         drawobject(objects[14],glm::vec3(xpos+j*25,trans[14][1],0),rotat[14],glm::vec3(0,0,1));
@@ -778,16 +803,25 @@ void draw()
     drawobject(objects[21],trans[21],rotat[21],glm::vec3(0,0,1));
     //Pillar 4
     drawobject(objects[22],trans[22],rotat[22],glm::vec3(0,0,1));
-
-    //Pigs
-    //Pillar 1
-    //drawobject(objects[10],trans[10],0,glm::vec3(0,0,1));
-    //Pillar 2
-    //drawobject(objects[11],trans[11],0,glm::vec3(0,0,1));
-    //Lower block
-    //drawobject(objects[12],trans[12],0,glm::vec3(0,0,1));
-    //Upper block
-    //drawobject(objects[13],trans[13],0,glm::vec3(0,0,1));
+    //Power up
+    if(!checkCollision(9,28) && !vanish)
+    {
+        for(int i=0;i<20;i++)
+        {
+            drawobject(objects[28],trans[28],i*20,glm::vec3(0,0,1));
+        }
+    }
+    if(checkCollision(9,28))
+    {
+        vanish=true;
+        radius=15.0f;
+    }
+    if(vanish)
+    {
+        objects[9]=createSector(radius,18,blueblack);
+        centre[9].pb(mp(mp(0.0f,0.0f),radius));
+    }
+    //Most of the drawing
     if(checkCollision(20,10))
     {
         piggy=false;
@@ -849,6 +883,8 @@ void draw()
             }
         }
     }
+    //Inner Lower block
+    drawobject(objects[27],trans[27],rotat[27],glm::vec3(0,0,1));
     glutSwapBuffers ();
 }
 
@@ -892,16 +928,6 @@ VAO* createTriangle(float X1,float Y1,float X2,float Y2,float X3,float Y3)
     return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,color_buffer_data,GL_FILL);
 }
 
-VAO* createSector(float R,int parts,GLfloat colours[])
-{
-    float diff=360.0f/parts;
-    float A1=formatAngle(-diff/2);
-    float A2=formatAngle(diff/2);
-    GLfloat vertex_buffer_data[]={0.0f,0.0f,0.0f,R*cos(D2R(A1)),R*sin(D2R(A1)),0.0f,R*cos(D2R(A2)),R*sin(D2R(A2)),0.0f};
-    GLfloat color_buffer_data[]={1,0,0,1,0,0,1,0,0};
-    return create3DObject(GL_TRIANGLES,3,vertex_buffer_data,colours,GL_FILL);
-}
-
 void divideRect(int i,float width,float height)
 {
     for(int j=0;j<(int)(width/(2.0*height));j++)
@@ -918,11 +944,19 @@ void initGL(int width, int height)
 {
     //Colours
 
+    float r,g,b;
     GLfloat blue[]={0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0};
-    GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
     GLfloat yellow[]={1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0};
     GLfloat lightyellow[]={1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0};
     GLfloat lightblue[]={0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0};
+    r=153.0/255.0;
+    g=115.0/255.0;
+    b=0.0/255.0;
+    GLfloat lightbrown[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
+    r=77.0/255.0;
+    g=58.0/255.0;
+    b=0.0/255.0;
+    GLfloat darkbrown[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
     //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
@@ -943,10 +977,10 @@ void initGL(int width, int height)
     rotat[2]=0.0f;
     movable[2]=false;
     //Left Wall
-    objects[3]=createRectangle(10.0f,300.0f,blue);
-    divideRect(3,10.0f,300.0f);
+    objects[3]=createRectangle(300.0f,10.0f,blue);
+    divideRect(3,300.0f,10.0f);
     trans[3]=glm::vec3(-390.0f,0.0f,0.0f);
-    rotat[3]=0.0f;
+    rotat[3]=-90.0f;
     movable[3]=false;
 
     //Cannon
@@ -964,7 +998,7 @@ void initGL(int width, int height)
 
     //Circle
     objects[6]=createSector(20,18,blueblack);
-    trans[6]=glm::vec3(-290.0f,-260.0f,0.0f);
+    trans[6]=glm::vec3(-295.0f,-260.0f,0.0f);
     rotat[6]=0.0f;
     movable[6]=false;
 
@@ -981,7 +1015,7 @@ void initGL(int width, int height)
     movable[8]=false;
 
     //Projectile
-    objects[9]=createSector(10.0f,18,blueblack);
+    objects[9]=createSector(radius,18,blueblack);
     centre[9].pb(mp(mp(0.0f,0.0f),10.0f));
     Mass[9]=250.0f;
     velx[9]=vely[9]=0.0f;
@@ -990,7 +1024,7 @@ void initGL(int width, int height)
     movable[9]=true;
 
     //Pillar 1
-    objects[10]=createRectangle(50,10,green);
+    objects[10]=createRectangle(50,10,darkbrown);
     divideRect(10,50.0f,10.0f);
     Mass[10]=450.0f;
     velx[10]=vely[10]=0.0f;
@@ -1026,7 +1060,7 @@ void initGL(int width, int height)
     movable[22]=false;
 
     //Lower block
-    objects[12]=createRectangle(60,30,green);
+    objects[12]=createRectangle(60,30,lightbrown);
     divideRect(12,60.0f,30.0f);
     Mass[12]=450.0f;
     trans[12]=glm::vec3(120.0f,-250.0f,0.0f);
@@ -1034,8 +1068,17 @@ void initGL(int width, int height)
     rotat[12]=0.0f;
     movable[12]=false;
 
+    //Inner Lower Block
+    objects[27]=createRectangle(55,25,darkbrown);
+    divideRect(27,60.0f,30.0f);
+    Mass[27]=450.0f;
+    trans[27]=glm::vec3(120.0f,-250.0f,0.0f);
+    velx[27]=vely[27]=0.0f;
+    rotat[27]=0.0f;
+    movable[27]=false;
+
     //Upper block
-    objects[13]=createRectangle(40,20,green);
+    objects[13]=createRectangle(40,20,lightbrown);
     divideRect(13,40.0f,20.0f);
     Mass[13]=450.0f;
     velx[13]=vely[13]=0.0f;
@@ -1049,8 +1092,9 @@ void initGL(int width, int height)
     rotat[14]=0.0f;
     movable[14]=false;
 
-    objects[23]=createRectangle(350,30,blue);
-    trans[23]=glm::vec3(-10.0f,240.0f,0.0f);
+    //Power bar background
+    objects[23]=createRectangle(200,30,blue);
+    trans[23]=glm::vec3(-145.0f,240.0f,0.0f);
     rotat[23]=0.0f;
     movable[32]=false;
     //Pigs
@@ -1103,16 +1147,16 @@ void initGL(int width, int height)
     movable[20]=false;
    
     //Sun
-    objects[24]=createSector(50.0f,18,yellow);
-    centre[24].pb(mp(mp(0.0f,0.0f),50.0f));
+    objects[24]=createSector(40.0f,18,yellow);
+    centre[24].pb(mp(mp(0.0f,0.0f),40.0f));
     Mass[24]=250.0f;
     velx[24]=vely[24]=0.0f;
     trans[24]=glm::vec3(-250.0f,100.0f,0.0f);
     rotat[24]=0.0f;
     movable[24]=false;
     //Sun shade
-    objects[25]=createSector(70.0f,18,lightyellow);
-    centre[25].pb(mp(mp(0.0f,0.0f),50.0f));
+    objects[25]=createSector(60.0f,25,lightyellow);
+    centre[25].pb(mp(mp(0.0f,0.0f),60.0f));
     Mass[25]=250.0f;
     velx[25]=vely[25]=0.0f;
     trans[25]=glm::vec3(-250.0f,100.0f,0.0f);
@@ -1120,13 +1164,22 @@ void initGL(int width, int height)
     movable[25]=false;
     //Inner tank head
     objects[26]=createSector(30.0f,18,lightblue);
-    centre[26].pb(mp(mp(0.0f,0.0f),35.0f));
+    centre[26].pb(mp(mp(0.0f,0.0f),30.0f));
     Mass[26]=250.0f;
     velx[26]=vely[26]=0.0f;
     trans[26]=glm::vec3(-317.0f,-190.0f,0.0f);
     rotat[26]=0.0f;
     movable[26]=false;
-    
+
+    //Power up 
+    objects[28]=createSector(30.0f,18,lightblue);
+    centre[28].pb(mp(mp(0.0f,0.0f),30.0f));
+    Mass[28]=250.0f;
+    velx[28]=vely[28]=0.0f;
+    trans[28]=glm::vec3(215.0f,40.0f,0.0f);
+    rotat[28]=0.0f;
+    movable[28]=false;
+
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
