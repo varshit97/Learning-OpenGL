@@ -462,7 +462,7 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
 VAO* createLine(float X1,float Y1,float X2,float Y2)
 {
     GLfloat vertex_buffer_data[]={X1,Y1,0.0f,X2,Y2,0.0f};
-    GLfloat color_buffer_data[]={0,0,0,0,0,0};
+    GLfloat color_buffer_data[]={102.0/255.0,51.0/255.0,0,102.0/255.0,51.0/255.0,0};
     return create3DObject(GL_LINES,2,vertex_buffer_data,color_buffer_data,GL_LINE);
 }
 
