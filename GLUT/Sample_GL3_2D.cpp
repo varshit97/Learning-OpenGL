@@ -4,6 +4,9 @@
 #include<cstring>
 #include <fstream>
 #include <vector>
+#include <map>
+#include <bitset>
+#include <sstream>
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/freeglut.h>
@@ -12,6 +15,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define PI M_PI
+
 using namespace std;
 typedef struct VAO {
     GLuint VertexArrayID;
@@ -122,9 +126,12 @@ void draw3DObject (struct VAO* vao)
 
 typedef pair< float, float > dub;
 typedef pair< dub ,float > tup;
+map<char,int> value;
+bitset<8> ok;
 
 int width,height;
 VAO* objects[MAX];
+VAO* strokes[8];
 float Mass[MAX];
 float velx[MAX];
 float vely[MAX];
@@ -137,6 +144,7 @@ int score=0;
 float COR=0.6f;
 float ADG=1.0f;
 float tick=0.6f;
+float Lx=15.0f,Ly=20.0f;
 
 vector< tup > centre[MAX];
 glm::vec3 trans[MAX];
@@ -206,6 +214,18 @@ void output(int x, int y, char str[])
     }
 }
 
+float toBits(int a)
+{
+    ok.reset();
+    for(int i=0;i<8;i++)
+    {
+        if((a>>i)&1)
+        {
+            ok.set(i);
+        }
+
+    }
+}
 
 /********************************************************** AIR FRICTION ********************************************************************/
 
@@ -309,7 +329,6 @@ void keyboardDown(unsigned char key, int x, int y)
             exit (0);
             break;
         default:
-            cout << "lolly" << endl;
             break;
     }
 }
@@ -338,10 +357,12 @@ void keyboardSpecialDown(int key, int x, int y)
             panX-=3.0f;
             break;
         case 101:
-            panY-=3.0f;
+            zoomY+=5.0f;
+            zoomX+=5.0f;
             break;
         case 103:
-            panY+=3.0f;
+            zoomY-=3.0f;
+            zoomX-=3.0f;
             break;
     }
 }
@@ -436,6 +457,13 @@ void drawobject(VAO* obj,glm::vec3 trans,float angle,glm::vec3 rotat)
     draw3DObject(obj);
 }
 
+VAO* createLine(float X1,float Y1,float X2,float Y2)
+{
+    GLfloat vertex_buffer_data[]={X1,Y1,0.0f,X2,Y2,0.0f};
+    GLfloat color_buffer_data[]={0,0,0,0,0,0};
+    return create3DObject(GL_LINES,2,vertex_buffer_data,color_buffer_data,GL_LINE);
+}
+
 VAO* createSector(float R,int parts,GLfloat colours[])
 {
     float diff=360.0f/parts;
@@ -507,10 +535,12 @@ void moveProjectile()
     }
 }
 
-bool vanish=false;
+bool vanish=false,vanish1=false;
 bool temp=false,piggy=true;
 int xpos=-320;
 float radius=10.0f;
+float touch=20.0f;
+float prevTransX,prevTransY;
 GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
 GLfloat blueblack[]={0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0,0.0,0.0,51.0/255.0};
 
@@ -679,7 +709,7 @@ void draw()
         vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         if(trans[9][0]<280)
         {
-            trans[9][0]=260.0f;
+            trans[9][0]=280.0f-touch;
         }
         if(trans[9][0]==280)
         {
@@ -687,7 +717,7 @@ void draw()
         }
         if(trans[9][0]>280)
         {
-            trans[9][0]=300.0f;
+            trans[9][0]=280.0f+touch;
         }
         startX[9]=trans[9][0];
         startY[9]=trans[9][1];
@@ -701,7 +731,7 @@ void draw()
         vely[9]=yvel(vely[9],0.3f,Mass[9],Timer[9],ADG);
         if(trans[9][0]<150)
         {
-            trans[9][0]=130.0f;
+            trans[9][0]=150.0f-touch;
         }
         if(trans[9][0]==150)
         {
@@ -709,7 +739,7 @@ void draw()
         }
         if(trans[9][0]>150)
         {
-            trans[9][0]=170.0f;
+            trans[9][0]=150.0f+touch;
         }
         startX[9]=trans[9][0];
         startY[9]=trans[9][1];
@@ -724,14 +754,14 @@ void draw()
         if(trans[9][1]<trans[22][1] && checkCollision(9,22))
         {
             //cout << "bhajesh " << trans[9][1] << " " << trans[22][1] << endl;
-            trans[9][1]=-20.0f;
+            trans[9][1]=-touch;
             velx[9]=0.0f;
             vely[9]=0.0f;
             Timer[9]=0.0f;
         }
         else
         {
-            trans[9][1]=20.0f;
+            trans[9][1]=touch;
             startX[9]=trans[9][0];
             startY[9]=trans[9][1];
             Timer[9]=tick;
@@ -801,7 +831,7 @@ void draw()
     }
     //Pillar 3
     drawobject(objects[21],trans[21],rotat[21],glm::vec3(0,0,1));
-    //Pillar 4
+    //Pillar94
     drawobject(objects[22],trans[22],rotat[22],glm::vec3(0,0,1));
     //Power up
     if(!checkCollision(9,28) && !vanish)
@@ -811,18 +841,37 @@ void draw()
             drawobject(objects[28],trans[28],i*20,glm::vec3(0,0,1));
         }
     }
+    if(!checkCollision(9,29) && !vanish1)
+    {
+        for(int i=0;i<20;i++)
+        {
+            drawobject(objects[29],trans[29],i*20,glm::vec3(0,0,1));
+        }
+    }
+    if(checkCollision(9,29) && radius==15)
+    {
+        vanish1=true;
+        radius=10.0f;
+    }
     if(checkCollision(9,28))
     {
         vanish=true;
         radius=15.0f;
     }
+    if(vanish1)
+    {
+        objects[9]=createSector(radius,18,blueblack);
+        centre[9].pb(mp(mp(0.0f,0.0f),radius));
+        touch=20.0f;
+    }
     if(vanish)
     {
         objects[9]=createSector(radius,18,blueblack);
         centre[9].pb(mp(mp(0.0f,0.0f),radius));
+        touch=40.0f;
     }
     //Most of the drawing
-    if(checkCollision(20,10))
+    if(checkCollision(20,10) && piggy)
     {
         piggy=false;
         score+=40;
@@ -885,6 +934,54 @@ void draw()
     }
     //Inner Lower block
     drawobject(objects[27],trans[27],rotat[27],glm::vec3(0,0,1));
+    //Inner Sun
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[30],trans[30],i*20,glm::vec3(0,0,1));
+    }
+    //Cloud
+    for(int j=1;j<4;j++)
+    {
+        for(int i=0;i<20;i++)
+        {
+            drawobject(objects[31],glm::vec3(trans[31][0]+j*30,trans[31][1]+j*5,0),i*20,glm::vec3(0,0,1));
+            prevTransX=trans[31][0]+j*30;
+            prevTransY=trans[31][1]+j*5;
+        }
+    }
+    for(int j=1;j<4;j++)
+    {
+        for(int i=0;i<20;i++)
+        {
+            drawobject(objects[31],glm::vec3(prevTransX+j*30-5,prevTransY-j*5+1,0),i*20,glm::vec3(0,0,1));
+        }
+    }
+    //Text
+    stringstream ss;
+    ss << score;
+    string text="score"+ss.str();
+    for(int i=0;i<5;i++)
+    {
+        toBits(value[text[i]]);
+        for(int j=0;j<8;j++)
+        {
+            if(ok[j])
+            {
+                drawobject(strokes[j],glm::vec3(100.0f+i*(2*Lx+5),235.0f,0),0,glm::vec3(0,0,1));
+            }
+        }
+    }
+    for(int i=5;i<text.length();i++)
+    {
+        toBits(value[text[i]]);
+        for(int j=0;j<8;j++)
+        {
+            if(ok[j])
+            {
+                drawobject(strokes[j],glm::vec3(100.0f+i*(2*Lx+5),235.0f,0),0,glm::vec3(0,0,1));
+            }
+        }
+    }
     glutSwapBuffers ();
 }
 
@@ -946,6 +1043,8 @@ void initGL(int width, int height)
 
     float r,g,b;
     GLfloat blue[]={0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0};
+    GLfloat redgreen[]={1.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0};
+    GLfloat bluegreen[]={0.0,0.0,1.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
     GLfloat yellow[]={1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0};
     GLfloat lightyellow[]={1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0,1.0,1.0,77.0/255.0};
     GLfloat lightblue[]={0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0,0.0,102.0/255.0,1.0};
@@ -957,6 +1056,14 @@ void initGL(int width, int height)
     g=58.0/255.0;
     b=0.0/255.0;
     GLfloat darkbrown[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
+    r=1;
+    g=153.0/255.0;
+    b=51.0/255.0;
+    GLfloat lightorange[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
+    r=1;
+    g=1;
+    b=1;
+    GLfloat white[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
     //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
@@ -1040,7 +1147,7 @@ void initGL(int width, int height)
     trans[11]=glm::vec3(280.0f,40.0f,0.0f);
     rotat[11]=90.0f;
     movable[11]=false;
-    
+
     //Pillar 3
     objects[21]=createRectangle(50,10,green);
     divideRect(21,50.0f,10.0f);
@@ -1049,7 +1156,7 @@ void initGL(int width, int height)
     trans[21]=glm::vec3(150.0f,40.0f,0.0f);
     rotat[21]=90.0f;
     movable[21]=false;
-    
+
     //Pillar 4
     objects[22]=createRectangle(70,10,green);
     divideRect(22,70.0f,10.0f);
@@ -1145,7 +1252,7 @@ void initGL(int width, int height)
     trans[20]=glm::vec3(-24.0f,-242.0f,0.0f);
     rotat[20]=0.0f;
     movable[20]=false;
-   
+
     //Sun
     objects[24]=createSector(40.0f,18,yellow);
     centre[24].pb(mp(mp(0.0f,0.0f),40.0f));
@@ -1154,6 +1261,14 @@ void initGL(int width, int height)
     trans[24]=glm::vec3(-250.0f,100.0f,0.0f);
     rotat[24]=0.0f;
     movable[24]=false;
+    //Inner Sun
+    objects[30]=createSector(35.0f,18,lightorange);
+    centre[30].pb(mp(mp(0.0f,0.0f),35.0f));
+    Mass[30]=250.0f;
+    velx[30]=vely[30]=0.0f;
+    trans[30]=glm::vec3(-250.0f,100.0f,0.0f);
+    rotat[30]=0.0f;
+    movable[30]=false;
     //Sun shade
     objects[25]=createSector(60.0f,25,lightyellow);
     centre[25].pb(mp(mp(0.0f,0.0f),60.0f));
@@ -1172,13 +1287,41 @@ void initGL(int width, int height)
     movable[26]=false;
 
     //Power up 
-    objects[28]=createSector(30.0f,18,lightblue);
+    objects[28]=createSector(30.0f,18,redgreen);
     centre[28].pb(mp(mp(0.0f,0.0f),30.0f));
     Mass[28]=250.0f;
     velx[28]=vely[28]=0.0f;
     trans[28]=glm::vec3(215.0f,40.0f,0.0f);
     rotat[28]=0.0f;
     movable[28]=false;
+
+    //Power down
+    objects[29]=createSector(30.0f,18,bluegreen);
+    centre[29].pb(mp(mp(0.0f,0.0f),30.0f));
+    Mass[29]=250.0f;
+    velx[29]=vely[28]=0.0f;
+    trans[29]=glm::vec3(280.0f,-250.0f,0.0f);
+    rotat[29]=0.0f;
+    movable[29]=false;
+
+    //Text
+    strokes[0]=createLine(-Lx,Ly,Lx,Ly);
+    strokes[1]=createLine(-Lx,Ly,-Lx,0.0f);
+    strokes[2]=createLine(-Lx,0.0f,-Lx,-Ly);
+    strokes[3]=createLine(-Lx,-Ly,Lx,-Ly);
+    strokes[4]=createLine(Lx,-Ly,Lx,0.0f);
+    strokes[5]=createLine(Lx,0.0f,Lx,Ly);
+    strokes[6]=createLine(-Lx,0.0f,Lx,0.0f);
+    strokes[7]=createLine(0.0f,0.0f,Lx,-Ly);
+    
+    //Cloud 
+    objects[31]=createSector(20.0f,18,white);
+    centre[31].pb(mp(mp(0.0f,0.0f),20.0f));
+    Mass[31]=250.0f;
+    velx[31]=vely[31]=0.0f;
+    trans[31]=glm::vec3(-100.0f,100.0f,0.0f);
+    rotat[31]=0.0f;
+    movable[31]=false;
 
     //Functionality
     programID=LoadShaders("Sample_GL.vert","Sample_GL.frag");
@@ -1197,6 +1340,21 @@ int main (int argc, char** argv)
     height = 600;
     initGLUT (argc, argv, width, height);
     initGL(width, height);
+    value['0']=63; 
+    value['1']=48; 
+    value['2']=109; 
+    value['3']=121; 
+    value['4']=114; 
+    value['5']=91; 
+    value['6']=95; 
+    value['7']=49; 
+    value['8']=127; 
+    value['9']=123; 
+    value['s']=91; 
+    value['c']=15; 
+    value['o']=63; 
+    value['r']=231; 
+    value['e']=79;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-mono")) {
             font = GLUT_BITMAP_9_BY_15;
