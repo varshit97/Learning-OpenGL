@@ -371,6 +371,7 @@ void keyboardSpecialUp(int key, int x, int y)
 {
 }
 
+float radius=10.0f;
 void mouseClick(int button, int state, int x, int y)
 {
     speed=30*(xmousepos/400);
@@ -384,6 +385,7 @@ void mouseClick(int button, int state, int x, int y)
     if(button==GLUT_RIGHT_BUTTON && state==GLUT_DOWN)
     {
         buttonPressed=0;
+        //radius=10.0f;
         rotateBarrel=0.0f;
         velx[9]=32.0f;
         vely[9]=0.0f;
@@ -537,8 +539,7 @@ void moveProjectile()
 
 bool vanish=false,vanish1=false;
 bool temp=false,piggy=true;
-int xpos=-320;
-float radius=10.0f;
+int xpos=-320,flag1=0,flag=0;
 float touch=20.0f;
 float prevTransX,prevTransY;
 GLfloat green[]={0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0};
@@ -861,14 +862,26 @@ void draw()
     if(vanish1)
     {
         objects[9]=createSector(radius,18,blueblack);
+        trans[29]=glm::vec3(800.0f,500.0f,0.0f);
         centre[9].pb(mp(mp(0.0f,0.0f),radius));
         touch=20.0f;
+        if(flag1==0)
+        {
+            score-=10;
+        }
+        flag1=1;
     }
     if(vanish)
     {
         objects[9]=createSector(radius,18,blueblack);
+        if(flag==0)
+        {
+            score+=20;
+        }
+        trans[28]=glm::vec3(800.0f,500.0f,0.0f);
         centre[9].pb(mp(mp(0.0f,0.0f),radius));
         touch=40.0f;
+        flag=1;
     }
     //Most of the drawing
     if(checkCollision(20,10) && piggy)
@@ -940,22 +953,52 @@ void draw()
         drawobject(objects[30],trans[30],i*20,glm::vec3(0,0,1));
     }
     //Cloud
-    for(int j=1;j<4;j++)
+    for(int i=0;i<20;i++)
     {
-        for(int i=0;i<20;i++)
-        {
-            drawobject(objects[31],glm::vec3(trans[31][0]+j*30,trans[31][1]+j*5,0),i*20,glm::vec3(0,0,1));
-            prevTransX=trans[31][0]+j*30;
-            prevTransY=trans[31][1]+j*5;
-        }
+        drawobject(objects[31],glm::vec3(-130,130,0),i*20,glm::vec3(0,0,1));
     }
-    for(int j=1;j<4;j++)
+    for(int i=0;i<20;i++)
     {
-        for(int i=0;i<20;i++)
-        {
-            drawobject(objects[31],glm::vec3(prevTransX+j*30-5,prevTransY-j*5+1,0),i*20,glm::vec3(0,0,1));
-        }
+        drawobject(objects[31],glm::vec3(-120,110,0),i*20,glm::vec3(0,0,1));
     }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-100,140,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-90,100,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-70,145,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-66,100,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-40,145,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-35,110,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-15,135,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-65,130,0),i*20,glm::vec3(0,0,1));
+    }
+    for(int i=0;i<20;i++)
+    {
+        drawobject(objects[31],glm::vec3(-85,130,0),i*20,glm::vec3(0,0,1));
+    }
+    //Inner Floor
+    drawobject(objects[32],trans[32],rotat[32],glm::vec3(0,0,1));
     //Text
     stringstream ss;
     ss << score;
@@ -1064,12 +1107,21 @@ void initGL(int width, int height)
     g=1;
     b=1;
     GLfloat white[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
+    r=153.0/255.0;
+    g=1;
+    b=221.0/255.0;
+    GLfloat lighestblue[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
     //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
     trans[0]=glm::vec3(0.0f,-290.0f,0.0f);
     rotat[0]=0.0f;
     movable[0]=false;
+    //Lower Floor
+    objects[32]=createRectangle(400.0f,5.0f,green);
+    divideRect(32,400.0f,10.0f);
+    trans[32]=glm::vec3(0.0f,-290.0f,0.0f);
+    rotat[32]=0.0f;
 
     //Right Wall
     objects[1]=createRectangle(300.0f,10.0f,blue);
@@ -1123,7 +1175,7 @@ void initGL(int width, int height)
 
     //Projectile
     objects[9]=createSector(radius,18,blueblack);
-    centre[9].pb(mp(mp(0.0f,0.0f),10.0f));
+    centre[9].pb(mp(mp(0.0f,0.0f),radius));
     Mass[9]=250.0f;
     velx[9]=vely[9]=0.0f;
     trans[9]=glm::vec3(0.0f,0.0f,0.0f);
@@ -1288,7 +1340,7 @@ void initGL(int width, int height)
 
     //Power up 
     objects[28]=createSector(30.0f,18,redgreen);
-    centre[28].pb(mp(mp(0.0f,0.0f),30.0f));
+    centre[28].pb(mp(mp(0.0f,0.0f),0.0f));
     Mass[28]=250.0f;
     velx[28]=vely[28]=0.0f;
     trans[28]=glm::vec3(215.0f,40.0f,0.0f);
@@ -1315,7 +1367,7 @@ void initGL(int width, int height)
     strokes[7]=createLine(0.0f,0.0f,Lx,-Ly);
     
     //Cloud 
-    objects[31]=createSector(20.0f,18,white);
+    objects[31]=createSector(20.0f,18,lighestblue);
     centre[31].pb(mp(mp(0.0f,0.0f),20.0f));
     Mass[31]=250.0f;
     velx[31]=vely[31]=0.0f;
