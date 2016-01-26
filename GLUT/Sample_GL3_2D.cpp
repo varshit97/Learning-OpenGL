@@ -537,7 +537,7 @@ void moveProjectile()
     }
 }
 
-bool vanish=false,vanish1=false;
+bool vanish=false,vanish1=false,rod=false,rodscore=false;
 bool temp=false,piggy=true;
 int xpos=-320,flag1=0,flag=0;
 float touch=20.0f;
@@ -889,15 +889,29 @@ void draw()
         piggy=false;
         score+=40;
     }
-    for(int i=10;i<21;i++)
+    if(checkCollision(9,10))
     {
-        if(i==10 && temp)
+        count[10]+=1;
+    }
+    if(rodscore)
+    {
+        if(checkCollision(9,10))
+        {
+            score+=10;
+            rodscore=false;
+        }
+    }
+    for(int i=10;i<20;i++)
+    {
+        if(i==10 && temp && !rod)
         {
             rotat[i]-=1.0f;
             if(rotat[i]==0)
             {
+                rod=true;
                 trans[i][0]=5.0f;
                 trans[i][1]=-270.0f;
+                rodscore=true;
                 temp=false;
                 continue;
             }
