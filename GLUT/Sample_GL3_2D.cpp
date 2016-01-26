@@ -816,10 +816,6 @@ void draw()
     {
         drawobject(objects[7],trans[7],i*20,glm::vec3(0,0,1));   
     }
-    for(int i=1;i<18;i++)
-    {
-        drawobject(objects[26],trans[26],i*10,glm::vec3(0,0,1));   
-    }
     //Barrel
     rotateBarrel=atan2((-ymousepos+300-trans[7][1]),(xmousepos-400-trans[7][0]))*(180/M_PI);
     trans[8][0]=trans[7][0]+50*cos(rotateBarrel*(M_PI/180));
@@ -829,6 +825,10 @@ void draw()
     for(int i=1;i<360;i++)
     {
         drawobject(objects[9],trans[9],i,glm::vec3(0,0,1));   
+    }
+    for(int i=1;i<18;i++)
+    {
+        drawobject(objects[26],trans[26],i*10,glm::vec3(0,0,1));   
     }
     //Pillar 3
     drawobject(objects[21],trans[21],rotat[21],glm::vec3(0,0,1));
@@ -999,6 +999,8 @@ void draw()
     }
     //Inner Floor
     drawobject(objects[32],trans[32],rotat[32],glm::vec3(0,0,1));
+    //Top rectangle
+    drawobject(objects[33],trans[33],rotat[33],glm::vec3(0,0,1));
     //Text
     stringstream ss;
     ss << score;
@@ -1111,6 +1113,10 @@ void initGL(int width, int height)
     g=1;
     b=221.0/255.0;
     GLfloat lighestblue[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
+    r=0;
+    g=153.0/255.0;
+    b=0;
+    GLfloat lighestgreen[]={r,g,b,r,g,b,r,g,b,r,g,b,r,g,b,r,g,b};
     //Floor
     objects[0]=createRectangle(400.0f,10.0f,green);
     divideRect(0,400.0f,10.0f);
@@ -1118,9 +1124,9 @@ void initGL(int width, int height)
     rotat[0]=0.0f;
     movable[0]=false;
     //Lower Floor
-    objects[32]=createRectangle(400.0f,5.0f,green);
+    objects[32]=createRectangle(380.0f,9.0f,lighestgreen);
     divideRect(32,400.0f,10.0f);
-    trans[32]=glm::vec3(0.0f,-290.0f,0.0f);
+    trans[32]=glm::vec3(0.0f,-300.0f,0.0f);
     rotat[32]=0.0f;
 
     //Right Wall
@@ -1154,6 +1160,11 @@ void initGL(int width, int height)
     trans[5]=glm::vec3(-317.0f,-230.0f,0.0f);
     rotat[5]=0.0f;
     movable[5]=false;
+    //Top rectangle
+    objects[33]=createRectangle(30,25,lightblue);
+    trans[33]=glm::vec3(-317.0f,-220.0f,0.0f);
+    rotat[33]=0.0f;
+    movable[33]=false;
 
     //Circle
     objects[6]=createSector(20,18,blueblack);
@@ -1192,7 +1203,7 @@ void initGL(int width, int height)
     movable[10]=true;
 
     //Pillar 2
-    objects[11]=createRectangle(50,10,green);
+    objects[11]=createRectangle(50,10,darkbrown);
     divideRect(11,50.0f,10.0f);
     Mass[11]=250.0f;
     velx[11]=vely[11]=0.0f;
@@ -1201,7 +1212,7 @@ void initGL(int width, int height)
     movable[11]=false;
 
     //Pillar 3
-    objects[21]=createRectangle(50,10,green);
+    objects[21]=createRectangle(50,10,darkbrown);
     divideRect(21,50.0f,10.0f);
     Mass[21]=250.0f;
     velx[21]=vely[21]=0.0f;
@@ -1210,7 +1221,7 @@ void initGL(int width, int height)
     movable[21]=false;
 
     //Pillar 4
-    objects[22]=createRectangle(70,10,green);
+    objects[22]=createRectangle(70,10,darkbrown);
     divideRect(22,70.0f,10.0f);
     Mass[22]=250.0f;
     velx[22]=vely[22]=0.0f;
